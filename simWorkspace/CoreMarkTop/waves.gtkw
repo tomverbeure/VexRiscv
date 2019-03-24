@@ -1,0 +1,63 @@
+[*]
+[*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
+[*] Sun Mar 24 04:59:57 2019
+[*]
+[dumpfile] "/home/ubuntu/projects/VexRiscv-tvb/simWorkspace/CoreMarkTop/test.vcd"
+[dumpfile_mtime] "Sun Mar 24 01:07:30 2019"
+[dumpfile_size] 928380286
+[savefile] "/home/ubuntu/projects/VexRiscv-tvb/simWorkspace/CoreMarkTop/waves.gtkw"
+[timestart] 711500
+[size] 1707 935
+[pos] 107 89
+*-15.962955 830000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] TOP.
+[treeopen] TOP.CoreMarkTop.
+[treeopen] TOP.CoreMarkTop.system_cpuComplex.
+[sst_width] 483
+[signals_width] 434
+[sst_expanded] 1
+[sst_vpaned_height] 272
+@28
+TOP.CoreMarkTop.io_asyncReset
+TOP.CoreMarkTop.io_mainClk
+TOP.CoreMarkTop.system_cpuComplex.toplevel_resetCtrl_systemReset
+TOP.CoreMarkTop.system_cpuComplex.toplevel_io_mainClk
+@800200
+-iBus
+@28
+TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_valid
+TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_ready
+@22
+TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+@200
+-
+@28
+TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_rsp_valid
+@22
+TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_rsp_payload_inst[31:0]
+@28
+TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_rsp_payload_error
+@1000200
+-iBus
+@800201
+-dBus
+@29
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_valid
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_ready
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_payload_wr
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_payload_size[1:0]
+@23
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_payload_address[31:0]
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_payload_data[31:0]
+@201
+-
+@29
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_rsp_ready
+@23
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_rsp_data[31:0]
+@29
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_rsp_error
+@1000201
+-dBus
+[pattern_trace] 1
+[pattern_trace] 0
