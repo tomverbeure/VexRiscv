@@ -13,6 +13,7 @@ import vexriscv.{VexRiscv, VexRiscvConfig, plugin}
 import vexriscv.demo._
 
 case class CoreMarkCpuComplexConfig(
+                  onChipRamHexFile  : String,
                   coreFrequency     : HertzNumber,
                   mergeIBusDBus     : Boolean,
                   iBusLatency       : Int,
@@ -27,6 +28,7 @@ case class CoreMarkCpuComplexConfig(
 object CoreMarkCpuComplexConfig{
 
     def default = CoreMarkCpuComplexConfig(
+        onChipRamHexFile = "src/test/cpp/coremark/coremark.hex",
         coreFrequency = 100 MHz,
         mergeIBusDBus = false,
         iBusLatency = 1,
@@ -132,8 +134,7 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig) extends Compone
     val ram = new CoreMarkPipelinedMemoryBusRam(
         dualBus                   = !mergeIBusDBus,
         onChipRamSize             = onChipRamSize,
-//        onChipRamHexFile          = onChipRamHexFile,
-        onChipRamHexFile          = null,
+        onChipRamHexFile          = onChipRamHexFile,
         pipelinedMemoryBusConfig  = pipelinedMemoryBusConfig
     )
 
