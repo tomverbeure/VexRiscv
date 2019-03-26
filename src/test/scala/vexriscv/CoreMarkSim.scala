@@ -8,7 +8,7 @@ import scala.collection.mutable
 
 object CoreMarkSim {
   def main(args: Array[String]): Unit = {
-    def config = CoreMarkCpuComplexConfig.default
+    def config = CoreMarkCpuComplexConfig.fast
 
     val simSlowDown = false
     SimConfig.

@@ -241,7 +241,7 @@ case class CoreMarkPipelinedMemoryBusRam(dualBus : Boolean, onChipRamSize : BigI
     val ram = Mem(Bits(32 bits), onChipRamSize / 4)
 
     if(onChipRamHexFile != null){
-        HexTools.initRam(ram, onChipRamHexFile, 0x80000000l)
+        HexTools.initRam(ram, onChipRamHexFile, 0x00000000l)
     }
 
     io.busA.rsp.valid   := RegNext(io.busA.cmd.fire && !io.busA.cmd.write) init(False)
@@ -313,6 +313,7 @@ case class CoreMarkTop(config : CoreMarkCpuComplexConfig) extends Component{
         val asyncReset  = in Bool
         val mainClk     = in Bool
 
+//        val apb         = master(Apb3(config.apb3Config))
 //        val uart        = master(Uart())
     }
 
@@ -349,5 +350,7 @@ case class CoreMarkTop(config : CoreMarkCpuComplexConfig) extends Component{
     val system = new ClockingArea(systemClockDomain) {
 
         val cpuComplex = new CoreMarkCpuComplex(config)
-  }
+//        cpuComplex.io.apb <> io.apb
+        cpuComplex.io.apb.PREADY := True
+    }
 }
