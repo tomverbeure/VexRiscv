@@ -64,6 +64,8 @@ object CoreMarkCpuComplexConfig{
                 executeInsertion = false
             ),
             new LightShifterPlugin,
+            new MulSimplePlugin,
+            new DivPlugin,
             new HazardSimplePlugin(
                 bypassExecute = false,
                 bypassMemory = false,
