@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.66 (w)1999-2015 BSI
-[*] Sun Mar 24 04:59:57 2019
+[*] Tue Mar 26 05:26:04 2019
 [*]
 [dumpfile] "/home/ubuntu/projects/VexRiscv-tvb/simWorkspace/CoreMarkTop/test.vcd"
-[dumpfile_mtime] "Sun Mar 24 01:07:30 2019"
-[dumpfile_size] 928380286
-[savefile] "/home/ubuntu/projects/VexRiscv-tvb/simWorkspace/CoreMarkTop/waves.gtkw"
-[timestart] 711500
+[dumpfile_mtime] "Tue Mar 26 05:21:53 2019"
+[dumpfile_size] 1105176637
+[savefile] "/home/ubuntu/projects/VexRiscv-tvb/waves.gtkw"
+[timestart] 0
 [size] 1707 935
-[pos] 107 89
-*-15.962955 830000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -1 -1
+*-35.283154 724760000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.CoreMarkTop.
 [treeopen] TOP.CoreMarkTop.system_cpuComplex.
@@ -29,6 +29,59 @@ TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_valid
 TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_ready
 @22
 TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+@800022
+#{TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31|0]} (0)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (1)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (2)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (3)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (4)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (5)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (6)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (7)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (8)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (9)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (10)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (11)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (12)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (13)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (14)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (15)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (16)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (17)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (18)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (19)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (20)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (21)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (22)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (23)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (24)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (25)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (26)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (27)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (28)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (29)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (30)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (31)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (16)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (17)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (18)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (19)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (20)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (21)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (22)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (23)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (24)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (25)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (26)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (27)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (28)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (29)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (30)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (31)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+@808022
+TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+@c00022
+#{TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[15:0]} (16)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (17)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (18)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (19)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (20)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (21)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (22)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (23)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (24)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (25)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (26)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (27)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (28)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (29)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (30)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (31)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+@28
+(16)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(17)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(18)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(19)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(20)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(21)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(22)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(23)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(24)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(25)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(26)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(27)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(28)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(29)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(30)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(31)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+@1401200
+-group_end
+@c08022
+#{TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[15:0]} (16)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (17)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (18)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (19)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (20)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (21)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (22)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (23)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (24)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (25)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (26)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (27)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (28)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (29)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (30)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0] (31)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+@28
+(16)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(17)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(18)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(19)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(20)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(21)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(22)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(23)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(24)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(25)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(26)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(27)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(28)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(29)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(30)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+(31)TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_cmd_payload_pc[31:0]
+@1401200
+-group_end
+@20000
+-
+-
+-
+@1001200
+-group_end
+-group_end
 @200
 -
 @28
@@ -39,25 +92,101 @@ TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_rsp_payload_inst[31:0]
 TOP.CoreMarkTop.system_cpuComplex.cpu.iBus_rsp_payload_error
 @1000200
 -iBus
-@800201
+@c00200
 -dBus
-@29
+@28
 TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_valid
 TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_ready
 TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_payload_wr
 TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_payload_size[1:0]
-@23
+@22
 TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_payload_address[31:0]
 TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_cmd_payload_data[31:0]
+@200
+-
+@28
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_rsp_ready
+@22
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_rsp_data[31:0]
+@28
+TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_rsp_error
+@1401200
+-dBus
+@200
+-
+@800201
+-apb
+@29
+TOP.CoreMarkTop.system_cpuComplex.io_apb_PENABLE
+TOP.CoreMarkTop.system_cpuComplex.io_apb_PREADY
+TOP.CoreMarkTop.system_cpuComplex.io_apb_PSEL[0]
+@23
+TOP.CoreMarkTop.system_cpuComplex.io_apb_PADDR[19:0]
+@29
+TOP.CoreMarkTop.system_cpuComplex.io_apb_PWRITE
+@800023
+TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0]
+@c00821
+#{TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[7:0]} (24)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0] (25)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0] (26)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0] (27)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0] (28)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0] (29)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0] (30)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0] (31)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0]
+@28
+(24)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0]
+(25)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0]
+(26)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0]
+(27)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0]
+(28)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0]
+(29)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0]
+(30)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0]
+(31)TOP.CoreMarkTop.system_cpuComplex.io_apb_PWDATA[31:0]
+@1401201
+-group_end
+@1001201
+-group_end
 @201
 -
-@29
-TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_rsp_ready
 @23
-TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_rsp_data[31:0]
+TOP.CoreMarkTop.system_cpuComplex.io_apb_PRDATA[31:0]
 @29
-TOP.CoreMarkTop.system_cpuComplex.cpu.dBus_rsp_error
+TOP.CoreMarkTop.system_cpuComplex.io_apb_PSLVERROR
 @1000201
--dBus
+-apb
+@800200
+-busA
+@28
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busA_cmd_valid
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busA_cmd_ready
+@22
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busA_cmd_payload_address[31:0]
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busA_cmd_payload_data[31:0]
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busA_cmd_payload_mask[3:0]
+@28
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busA_cmd_payload_write
+@200
+-
+@28
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busA_rsp_valid
+@22
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busA_rsp_payload_data[31:0]
+@1000200
+-busA
+@c00200
+-busB
+@28
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busB_cmd_valid
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busB_cmd_ready
+@22
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busB_cmd_payload_address[31:0]
+@28
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busB_cmd_payload_write
+@22
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busB_cmd_payload_mask[3:0]
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busB_cmd_payload_data[31:0]
+@200
+-
+@28
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busB_rsp_valid
+@22
+TOP.CoreMarkTop.system_cpuComplex.ram.io_busB_rsp_payload_data[31:0]
+@1401200
+-busB
 [pattern_trace] 1
 [pattern_trace] 0
