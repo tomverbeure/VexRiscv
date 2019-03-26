@@ -313,8 +313,7 @@ case class CoreMarkTop(config : CoreMarkCpuComplexConfig) extends Component{
         val asyncReset  = in Bool
         val mainClk     = in Bool
 
-//        val apb         = master(Apb3(config.apb3Config))
-//        val uart        = master(Uart())
+        val apb         = master(Apb3(config.apb3Config))
     }
 
     val resetCtrlClockDomain = ClockDomain(
@@ -350,7 +349,6 @@ case class CoreMarkTop(config : CoreMarkCpuComplexConfig) extends Component{
     val system = new ClockingArea(systemClockDomain) {
 
         val cpuComplex = new CoreMarkCpuComplex(config)
-//        cpuComplex.io.apb <> io.apb
-        cpuComplex.io.apb.PREADY := True
+        cpuComplex.io.apb <> io.apb
     }
 }
