@@ -27,6 +27,27 @@ case class CoreMarkCpuComplexConfig(
 
 object CoreMarkCpuComplexConfig{
 
+    val ucycleCsrConfig =  CsrPluginConfig(
+        catchIllegalAccess  = false,
+        mvendorid           = null,
+        marchid             = null,
+        mimpid              = null,
+        mhartid             = null,
+        misaExtensionsInit  = 66,
+        misaAccess          = CsrAccess.NONE,
+        mtvecAccess         = CsrAccess.NONE,
+        mtvecInit           = 0x00000020l,
+        mepcAccess          = CsrAccess.NONE,
+        mscratchGen         = false,
+        mcauseAccess        = CsrAccess.READ_ONLY,
+        mbadaddrAccess      = CsrAccess.NONE,
+        mcycleAccess        = CsrAccess.NONE,
+        minstretAccess      = CsrAccess.NONE,
+        ecallGen            = false,
+        wfiGenAsWait        = false,
+        ucycleAccess        = CsrAccess.READ_ONLY
+    )
+
     def default = CoreMarkCpuComplexConfig(
         onChipRamHexFile = "src/test/cpp/coremark/coremark.hex",
         coreFrequency = 100 MHz,
@@ -79,6 +100,7 @@ object CoreMarkCpuComplexConfig{
                 earlyBranch = false,
                 catchAddressMisaligned = false
             ),
+            new CsrPlugin(ucycleCsrConfig),
             new YamlPlugin("cpu0.yaml")
         )
     )
@@ -159,6 +181,10 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig) extends Compone
                 mainBusArbiter.io.dBus.cmd << plugin.dBus.cmd.halfPipe()
                 mainBusArbiter.io.dBus.rsp <> plugin.dBus.rsp
             }
+        }
+        case plugin : CsrPlugin        => {
+            plugin.externalInterrupt    := False
+            plugin.timerInterrupt       := False
         }
         case _ =>
     }
