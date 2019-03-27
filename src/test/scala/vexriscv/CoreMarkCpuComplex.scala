@@ -61,44 +61,41 @@ object CoreMarkCpuComplexConfig{
         cpuPlugins = ArrayBuffer(
             new IBusSimplePlugin(
                 resetVector = 0x00000000l,
-                cmdForkOnSecondStage = true,
-                cmdForkPersistence = false,
-                prediction = NONE,
-                catchAccessFault = false,
-                compressedGen = false
+                cmdForkOnSecondStage    = true,
+                cmdForkPersistence      = false,
+                prediction              = DYNAMIC_TARGET,
+                catchAccessFault        = false,
+                compressedGen           = true
             ),
             new DBusSimplePlugin(
-                catchAddressMisaligned = false,
-                catchAccessFault = false,
-                earlyInjection = false
+                catchAddressMisaligned  = false,
+                catchAccessFault        = false,
+                earlyInjection          = false
             ),
             new DecoderSimplePlugin(
                 catchIllegalInstruction = false
             ),
             new RegFilePlugin(
-                regFileReadyKind = plugin.SYNC,
-                zeroBoot = false
+                regFileReadyKind        = plugin.SYNC,
+                zeroBoot                = false
             ),
             new IntAluPlugin,
             new SrcPlugin(
-                separatedAddSub = false,
-                executeInsertion = false
+                separatedAddSub         = false,
+                executeInsertion        = false
             ),
-            new LightShifterPlugin,
+            new FullBarrelShifterPlugin,
             new MulSimplePlugin,
             new DivPlugin,
             new HazardSimplePlugin(
-                bypassExecute = false,
-                bypassMemory = false,
-                bypassWriteBack = false,
-                bypassWriteBackBuffer = false,
-                pessimisticUseSrc = false,
-                pessimisticWriteRegFile = false,
-                pessimisticAddressMatch = false
+                bypassExecute           = false,
+                bypassMemory            = false,
+                bypassWriteBack         = false,
+                bypassWriteBackBuffer   = false
             ),
             new BranchPlugin(
-                earlyBranch = false,
-                catchAddressMisaligned = false
+                earlyBranch             = false,
+                catchAddressMisaligned  = false
             ),
             new CsrPlugin(ucycleCsrConfig),
             new YamlPlugin("cpu0.yaml")
@@ -106,14 +103,14 @@ object CoreMarkCpuComplexConfig{
     )
 
   def fast = {
-    val config = default
+      val config = default
 
-    // Replace HazardSimplePlugin to get datapath bypass
-    config.cpuPlugins(config.cpuPlugins.indexWhere(_.isInstanceOf[HazardSimplePlugin])) = new HazardSimplePlugin(
-      bypassExecute = true,
-      bypassMemory = true,
-      bypassWriteBack = true,
-      bypassWriteBackBuffer = true
+      // Replace HazardSimplePlugin to get datapath bypass
+      config.cpuPlugins(config.cpuPlugins.indexWhere(_.isInstanceOf[HazardSimplePlugin])) = new HazardSimplePlugin(
+          bypassExecute           = true,
+          bypassMemory            = true,
+          bypassWriteBack         = true,
+          bypassWriteBackBuffer   = true
     )
 //    config.cpuPlugins(config.cpuPlugins.indexWhere(_.isInstanceOf[LightShifterPlugin])) = new FullBarrelShifterPlugin()
 
