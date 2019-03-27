@@ -7,15 +7,18 @@ import spinal.core.sim._
 import scala.collection.mutable
 
 object CoreMarkSim {
-  def main(args: Array[String]): Unit = {
-    def config = CoreMarkCpuComplexConfig.fast
 
-    val simSlowDown = false
-    SimConfig.
-//        withWave.
-        allOptimisation.
-        compile(new CoreMarkTop(config)).
-        doSimUntilVoid{dut =>
+    def main(args: Array[String]): Unit = {
+
+        def config = CoreMarkCpuComplexConfig.fast
+
+        val simSlowDown = false
+        SimConfig.
+            //withWave.
+            allOptimisation.
+            compile(new CoreMarkTop(config)).
+            doSimUntilVoid
+        {dut =>
 
             val mainClkPeriod = (1e12/dut.config.coreFrequency.toDouble).toLong
 

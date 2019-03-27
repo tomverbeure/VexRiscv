@@ -49,7 +49,7 @@ object CoreMarkCpuComplexConfig{
     )
 
     def default = CoreMarkCpuComplexConfig(
-        onChipRamHexFile = "src/test/cpp/coremark/coremark.hex",
+        onChipRamHexFile = "src/test/cpp/coremark/coremark_O2_rv32i.hex",
         coreFrequency = 100 MHz,
         mergeIBusDBus = false,
         iBusLatency = 1,
