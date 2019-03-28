@@ -17,7 +17,7 @@ case class CoreMarkCpuComplexConfig(
                   coreFrequency     : HertzNumber,
                   mergeIBusDBus     : Boolean,
                   iBusLatency       : Int,
-                  dBusLatency       : Int, 
+                  dBusLatency       : Int,
                   apb3Config        : Apb3Config,
                   cpuPlugins        : ArrayBuffer[Plugin[VexRiscv]])
 {
@@ -47,6 +47,20 @@ object CoreMarkCpuComplexConfig{
         wfiGenAsWait        = false,
         ucycleAccess        = CsrAccess.READ_ONLY
     )
+
+    val configOptions = Array(
+        ("bypassExecute",           0,    1),
+        ("bypassMemory",            1,    1),
+        ("bypassWriteBack",         2,    1),
+        ("bypassWriteBackBuffer",   3,    1)
+    )
+
+    // start bit, nr bits
+
+    def constructConfig(configId : Long) : CoreMarkCpuComplexConfig = {
+        default
+    }
+
 
     def default = CoreMarkCpuComplexConfig(
         onChipRamHexFile = "src/test/cpp/coremark/coremark_O2_rv32i.hex",
@@ -84,7 +98,7 @@ object CoreMarkCpuComplexConfig{
                 separatedAddSub         = false,
                 executeInsertion        = false
             ),
-            new FullBarrelShifterPlugin,
+            new LightShifterPlugin,
             new MulSimplePlugin,
             new DivPlugin,
             new HazardSimplePlugin(
@@ -143,7 +157,7 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig) extends Compone
     // The CPU has 2 busses: iBus and dBus.
     // When mergeIBusDBus is true, when those 2 busses get merged first into the mainBus through the
     // MasterArbiter, which then goes to everything as the mainBus.
-    // When mergIBusDBus is false, the iBus goes directly busB of the RAM and nothing else. Mainwhile dBus 
+    // When mergIBusDBus is false, the iBus goes directly busB of the RAM and nothing else. Mainwhile dBus
     // get connected directly to mainBus, thus no MasterArbiter is needed. The RAM needs to be double-ported,
     // but that's often the case of FPGAs anyway, or a good approximation for systems that have individual
     // I-cache and D-cache.
@@ -161,9 +175,9 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig) extends Compone
 
     // Checkout plugins used to instanciate the CPU to connect them to the SoC
     for(plugin <- cpu.plugins) plugin match{
-        case plugin : IBusSimplePlugin => 
-            if (mergeIBusDBus) 
-                mainBusArbiter.io.iBus <> plugin.iBus 
+        case plugin : IBusSimplePlugin =>
+            if (mergeIBusDBus)
+                mainBusArbiter.io.iBus <> plugin.iBus
             else {
                 mainBusArbiter.io.iBus.cmd.valid    := False
                 mainBusArbiter.io.iBus.cmd.pc       := 0
@@ -210,7 +224,7 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig) extends Compone
             pipelineMaster  = pipelineMainBus
         )
     }
-    
+
 }
 
 case class CoreMarkMasterArbiter(
@@ -294,7 +308,7 @@ case class CoreMarkPipelinedMemoryBusRam(dualBus : Boolean, onChipRamSize : BigI
 }
 
 class CoreMarkPipelinedMemoryBusDecoder(
-            master : PipelinedMemoryBus, 
+            master : PipelinedMemoryBus,
             val specification : Seq[(PipelinedMemoryBus,SizeMapping)], pipelineMaster : Boolean
       ) extends Area
 {
@@ -306,10 +320,10 @@ class CoreMarkPipelinedMemoryBusDecoder(
         masterPipelined.cmd <-< master.cmd
         masterPipelined.rsp >> master.rsp
     }
-  
+
     val slaveBuses = specification.map(_._1)
     val memorySpaces = specification.map(_._2)
-  
+
     val hits = for((slaveBus, memorySpace) <- specification) yield {
         val hit = memorySpace.hit(masterPipelined.cmd.address)
         slaveBus.cmd.valid   := masterPipelined.cmd.valid && hit
@@ -318,13 +332,13 @@ class CoreMarkPipelinedMemoryBusDecoder(
     }
     val noHit = !hits.orR
     masterPipelined.cmd.ready := (hits,slaveBuses).zipped.map(_ && _.cmd.ready).orR || noHit
-  
+
     val rspPending  = RegInit(False) clearWhen(masterPipelined.rsp.valid) setWhen(masterPipelined.cmd.fire && !masterPipelined.cmd.write)
     val rspNoHit    = RegNext(False) init(False) setWhen(noHit)
     val rspSourceId = RegNextWhen(OHToUInt(hits), masterPipelined.cmd.fire)
     masterPipelined.rsp.valid   := slaveBuses.map(_.rsp.valid).orR || (rspPending && rspNoHit)
     masterPipelined.rsp.payload := slaveBuses.map(_.rsp.payload).read(rspSourceId)
-  
+
     when(rspPending && !masterPipelined.rsp.valid) { //Only one pending read request is allowed
         masterPipelined.cmd.ready := False
         slaveBuses.foreach(_.cmd.valid := False)
@@ -348,7 +362,7 @@ case class CoreMarkTop(config : CoreMarkCpuComplexConfig) extends Component{
 
     val resetCtrl = new ClockingArea(resetCtrlClockDomain) {
         val mainClkResetUnbuffered  = False
-    
+
         //Implement an counter to keep the reset axiResetOrder high 64 cycles
         // Also this counter will automatically do a reset when the system boot.
         val systemClkResetCounter = Reg(UInt(6 bits)) init(0)
@@ -359,11 +373,11 @@ case class CoreMarkTop(config : CoreMarkCpuComplexConfig) extends Component{
         when(BufferCC(io.asyncReset)){
             systemClkResetCounter := 0
         }
-    
+
         //Create all reset used later in the design
         val systemReset  = RegNext(mainClkResetUnbuffered)
     }
-  
+
 
     val systemClockDomain = ClockDomain(
         clock = io.mainClk,

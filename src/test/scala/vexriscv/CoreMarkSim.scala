@@ -5,12 +5,19 @@ import spinal.core._
 import spinal.core.sim._
 
 import scala.collection.mutable
+import vexriscv.plugin._
 
 object CoreMarkSim {
 
     def main(args: Array[String]): Unit = {
 
+        val configOptions = CoreMarkCpuComplexConfig.configOptions
+
+        printf("%s: %d, %d\n", configOptions(0)._1,configOptions(0)._2,configOptions(0)._3)
+
         def config = CoreMarkCpuComplexConfig.fast
+
+        config.cpuPlugins(config.cpuPlugins.indexWhere(_.isInstanceOf[LightShifterPlugin])) = new FullBarrelShifterPlugin()
 
         val simSlowDown = false
         SimConfig.
