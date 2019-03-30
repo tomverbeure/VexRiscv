@@ -8,6 +8,8 @@ import spinal.lib.bus.misc.SizeMapping
 import spinal.lib.bus.simple._
 
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.StringBuilder
+
 import vexriscv.plugin.{NONE, _}
 import vexriscv.{VexRiscv, VexRiscvConfig, plugin}
 import vexriscv.demo._
@@ -24,6 +26,7 @@ case class CoreMarkCpuComplexConfig(
     require(iBusLatency >=1, "iBusLatency must be >= 1")
     require(dBusLatency >=1, "dBusLatency must be >= 1")
 }
+
 
 object CoreMarkCpuComplexConfig{
 
@@ -73,18 +76,46 @@ object CoreMarkCpuComplexConfig{
         val DynamicTarget   = Value(3)
     }
 
+/*
+    case class Params(
+                  bypassExecute             : Boolean,
+                  bypassMemory              : Boolean,
+                  bypassWriteBack           : Boolean,
+                  bypassWriteBackBuffer     : Boolean,
+                  barrelShifter             : Boolean,
+                  multiply                  : MultiplyOption,
+                  divide                    : DivideOption,
+                  shifter                   : ShifterOption,
+                  prediction                : PredictionOption,
+                  compressed                : Boolean
+                )
+    {
+    }
+*/
+
     val configOptions = Array(
         // Option,                  starting bit,   nr of bits, max option
         ("BypassExecute",           0,              1,          1),
         ("BypassMemory",            1,              1,          1),
         ("BypassWriteBack",         2,              1,          1),
         ("BypassWriteBackBuffer",   3,              1,          1),
-        ("Shifter",                 4,              2,          ShifterOption.values.size-1),
-        ("BranchPredicition",       6,              2,          3),
-        ("Multiply",                8,              2,          MultiplyOption.values.size-1),
-        ("Prediction",             10,              2,          PredictionOption.values.size-1),
-        ("Compressed",             11,              1,          1)
+        ("Compressed",              4,              1,          1),
+        ("BranchEarly",             5,              1,          1),
+        ("Shifter",                 8,              2,          ShifterOption.values.size-1),
+        ("BranchPredicition",      10,              2,          PredictionOption.values.size-1),
+        ("Multiply",               12,              2,          MultiplyOption.values.size-1),
+        ("Divide",                 14,              2,          DivideOption.values.size-1),
+        ("Prediction",             16,              2,          PredictionOption.values.size-1)
     )
+
+    def configStr(config : CoreMarkCpuComplexConfig) : String = {
+
+        var str = new StringBuilder
+
+        str ++= "CoreMarkCpuComplexConfig:\n"
+
+        str.toString
+    }
 
     def constructConfig(configId : Long) : CoreMarkCpuComplexConfig = {
 
@@ -92,12 +123,19 @@ object CoreMarkCpuComplexConfig{
         var bypassMemory              = false
         var bypassWriteBack           = false
         var bypassWriteBackBuffer     = false
-        var barrelShifter             = false
+        var compressed                = false
+        var branchEarly               = false
         var multiply                  = MultiplyOption.None
         var divide                    = DivideOption.None
         var shifter                   = ShifterOption.Iterative
         var prediction                = PredictionOption.None
-        var compressed                = false
+
+        var str = new StringBuilder
+        str ++= "\n"
+        str ++= "-----------------------------------\n"
+        str ++= "CoreMarkCpuComplexConfig parameters\n"
+        str ++= "-----------------------------------\n"
+        str ++= "\n"
 
         for(option <- configOptions){
             val optionVal = ((configId >> option._2) & ((1<<(option._3))-1)).toInt
@@ -108,18 +146,24 @@ object CoreMarkCpuComplexConfig{
             }
 
             option._1 match {
-                case "BypassExecute"          => bypassExecute          = (optionVal == 1)
-                case "BypassMemory"           => bypassMemory           = (optionVal == 1)
-                case "BypassWriteBack"        => bypassWriteBack        = (optionVal == 1)
-                case "BypassWriteBackBuffer"  => bypassWriteBackBuffer  = (optionVal == 1)
-                case "Multiply"               => multiply               = MultiplyOption(optionVal)
-                case "Shifter"                => shifter                = ShifterOption(optionVal)
-                case "Prediction"             => prediction             = PredictionOption(optionVal)
-                case "Compressed"             => compressed             = (optionVal == 1)
+                case "BypassExecute"          => { bypassExecute          = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
+                case "BypassMemory"           => { bypassMemory           = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
+                case "BypassWriteBack"        => { bypassWriteBack        = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
+                case "BypassWriteBackBuffer"  => { bypassWriteBackBuffer  = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
+                case "Compressed"             => { compressed             = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
+                case "BranchEarly"            => { branchEarly            = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
+                case "Multiply"               => { multiply               = MultiplyOption(optionVal); str ++= s"${option._1}: ${ multiply.toString }\n" }
+                case "Divide"                 => { divide                 = DivideOption(optionVal); str ++= s"${option._1}: ${ divide.toString }\n" }
+                case "Shifter"                => { shifter                = ShifterOption(optionVal); str ++= s"${option._1}: ${ shifter.toString }\n" }
+                case "Prediction"             => { prediction             = PredictionOption(optionVal); str ++= s"${option._1}: ${ prediction.toString }\n" }
                 case _                        =>
             }
-
         }
+
+        str ++= "-----------------------------------\n"
+        str ++= "\n"
+
+        println(str)
 
         //println(multiply.toString)
 
@@ -186,7 +230,7 @@ object CoreMarkCpuComplexConfig{
                     bypassWriteBackBuffer   = bypassWriteBackBuffer
                 ),
                 new BranchPlugin(
-                    earlyBranch             = false,
+                    earlyBranch             = branchEarly,
                     catchAddressMisaligned  = false
                 ),
                 new CsrPlugin(ucycleCsrConfig),
