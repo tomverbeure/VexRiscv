@@ -48,17 +48,153 @@ object CoreMarkCpuComplexConfig{
         ucycleAccess        = CsrAccess.READ_ONLY
     )
 
+    object MultiplyOption extends Enumeration {
+        val None            = Value(0)
+        val Iterative       = Value(1)
+        val Simple          = Value(2)
+    }
+
+    object DivideOption extends Enumeration {
+        val None            = Value(0)
+        val Iterative       = Value(1)
+        val IterativeDhry   = Value(2)
+    }
+
+    object ShifterOption extends Enumeration {
+        val Iterative       = Value(0)
+        val BarrelExe       = Value(1)
+        val BarrelMem       = Value(2)
+    }
+
+    object PredictionOption extends Enumeration {
+        val None            = Value(0)
+        val Static          = Value(1)
+        val Dynamic         = Value(2)
+        val DynamicTarget   = Value(3)
+    }
+
     val configOptions = Array(
-        ("bypassExecute",           0,    1),
-        ("bypassMemory",            1,    1),
-        ("bypassWriteBack",         2,    1),
-        ("bypassWriteBackBuffer",   3,    1)
+        // Option,                  starting bit,   nr of bits, max option
+        ("BypassExecute",           0,              1,          1),
+        ("BypassMemory",            1,              1,          1),
+        ("BypassWriteBack",         2,              1,          1),
+        ("BypassWriteBackBuffer",   3,              1,          1),
+        ("Shifter",                 4,              2,          ShifterOption.values.size-1),
+        ("BranchPredicition",       6,              2,          3),
+        ("Multiply",                8,              2,          MultiplyOption.values.size-1),
+        ("Prediction",             10,              2,          PredictionOption.values.size-1),
+        ("Compressed",             11,              1,          1)
     )
 
-    // start bit, nr bits
-
     def constructConfig(configId : Long) : CoreMarkCpuComplexConfig = {
-        default
+
+        var bypassExecute             = false
+        var bypassMemory              = false
+        var bypassWriteBack           = false
+        var bypassWriteBackBuffer     = false
+        var barrelShifter             = false
+        var multiply                  = MultiplyOption.None
+        var divide                    = DivideOption.None
+        var shifter                   = ShifterOption.Iterative
+        var prediction                = PredictionOption.None
+        var compressed                = false
+
+        for(option <- configOptions){
+            val optionVal = ((configId >> option._2) & ((1<<(option._3))-1)).toInt
+
+            if (optionVal > option._3){
+                printf("Option %s out of bounds (%d)!", option._1, optionVal)
+                System.exit(-1)
+            }
+
+            option._1 match {
+                case "BypassExecute"          => bypassExecute          = (optionVal == 1)
+                case "BypassMemory"           => bypassMemory           = (optionVal == 1)
+                case "BypassWriteBack"        => bypassWriteBack        = (optionVal == 1)
+                case "BypassWriteBackBuffer"  => bypassWriteBackBuffer  = (optionVal == 1)
+                case "Multiply"               => multiply               = MultiplyOption(optionVal)
+                case "Shifter"                => shifter                = ShifterOption(optionVal)
+                case "Prediction"             => prediction             = PredictionOption(optionVal)
+                case "Compressed"             => compressed             = (optionVal == 1)
+                case _                        =>
+            }
+
+        }
+
+        //println(multiply.toString)
+
+        val config = CoreMarkCpuComplexConfig(
+            onChipRamHexFile = "src/test/cpp/coremark/coremark_O2_rv32i.hex",
+            coreFrequency = 100 MHz,
+            mergeIBusDBus = false,
+            iBusLatency = 1,
+            dBusLatency = 1,
+            apb3Config = Apb3Config(
+                addressWidth = 20,
+                dataWidth = 32
+            ),
+            cpuPlugins = ArrayBuffer(
+                new IBusSimplePlugin(
+                    resetVector = 0x00000000l,
+                    cmdForkOnSecondStage    = true,
+                    cmdForkPersistence      = false,
+                    prediction              = prediction match {
+                                                case PredictionOption.None          => NONE
+                                                case PredictionOption.Static        => STATIC
+                                                case PredictionOption.Dynamic       => DYNAMIC
+                                                case PredictionOption.DynamicTarget => DYNAMIC_TARGET
+                                              },
+                    catchAccessFault        = false,
+                    compressedGen           = compressed
+                ),
+                new DBusSimplePlugin(
+                    catchAddressMisaligned  = false,
+                    catchAccessFault        = false,
+                    earlyInjection          = false
+                ),
+                new DecoderSimplePlugin(
+                    catchIllegalInstruction = false
+                ),
+                new RegFilePlugin(
+                    regFileReadyKind        = plugin.SYNC,
+                    zeroBoot                = false
+                ),
+                new IntAluPlugin,
+                new SrcPlugin(
+                    separatedAddSub         = false,
+                    executeInsertion        = false
+                ),
+                shifter match {
+                    case ShifterOption.Iterative    => new LightShifterPlugin()
+                    case ShifterOption.BarrelExe    => new FullBarrelShifterPlugin(earlyInjection = true)
+                    case ShifterOption.BarrelMem    => new FullBarrelShifterPlugin(earlyInjection = false)
+                },
+                multiply match {
+                    case MultiplyOption.None        => null
+                    case MultiplyOption.Iterative   => new MulDivIterativePlugin(genMul = true, genDiv = false, mulUnrollFactor = 1)
+                    case MultiplyOption.Simple      => new MulSimplePlugin()
+                },
+                divide match {
+                    case DivideOption.None          => null
+                    case DivideOption.Iterative     => new DivPlugin()
+                    case DivideOption.IterativeDhry => new MulDivIterativePlugin(genMul = false, genDiv = true, divUnrollFactor = 1, dhrystoneOpt = true)
+                },
+                new HazardSimplePlugin(
+                    bypassExecute           = bypassExecute,
+                    bypassMemory            = bypassMemory,
+                    bypassWriteBack         = bypassWriteBack,
+                    bypassWriteBackBuffer   = bypassWriteBackBuffer
+                ),
+                new BranchPlugin(
+                    earlyBranch             = false,
+                    catchAddressMisaligned  = false
+                ),
+                new CsrPlugin(ucycleCsrConfig),
+                new YamlPlugin("cpu0.yaml")
+            ).filter(_ != null)
+        )
+
+        config
     }
 
 
@@ -77,9 +213,9 @@ object CoreMarkCpuComplexConfig{
                 resetVector = 0x00000000l,
                 cmdForkOnSecondStage    = true,
                 cmdForkPersistence      = false,
-                prediction              = DYNAMIC_TARGET,
+                prediction              = NONE,
                 catchAccessFault        = false,
-                compressedGen           = true
+                compressedGen           = false
             ),
             new DBusSimplePlugin(
                 catchAddressMisaligned  = false,

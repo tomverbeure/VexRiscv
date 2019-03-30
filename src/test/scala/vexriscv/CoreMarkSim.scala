@@ -15,9 +15,7 @@ object CoreMarkSim {
 
         printf("%s: %d, %d\n", configOptions(0)._1,configOptions(0)._2,configOptions(0)._3)
 
-        def config = CoreMarkCpuComplexConfig.fast
-
-        config.cpuPlugins(config.cpuPlugins.indexWhere(_.isInstanceOf[LightShifterPlugin])) = new FullBarrelShifterPlugin()
+        def config = CoreMarkCpuComplexConfig.constructConfig(0x55555555)
 
         val simSlowDown = false
         SimConfig.
