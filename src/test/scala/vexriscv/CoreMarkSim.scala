@@ -5,6 +5,7 @@ import spinal.core._
 import spinal.core.sim._
 
 import scala.collection.mutable
+
 import vexriscv.plugin._
 
 object CoreMarkSim {
@@ -34,20 +35,21 @@ object CoreMarkSim {
             clockDomain.waitSampling()
 
             var done = false
+            var ticks = -1;
 
             while(!done){
                 clockDomain.waitSampling()
 
                 if (dut.io.apb.PENABLE.toBoolean){
-                    if (dut.io.apb.PADDR.toLong == 0x0){
-                        printf("%c", (dut.io.apb.PWDATA.toLong & 0xff).toChar)
-                    }
-                    else{
-                        done = true
+                    dut.io.apb.PADDR.toLong match {
+                        case 0x0 => printf("%c", (dut.io.apb.PWDATA.toLong & 0xff).toChar)
+                        case 0x4 => done = true
+                        case 0x8 => ticks = dut.io.apb.PWDATA.toLong.toInt
                     }
                 }
             }
 
+            printf("Duration: %d\n", ticks);
             printf("Done!\n")
             simSuccess()
         }
