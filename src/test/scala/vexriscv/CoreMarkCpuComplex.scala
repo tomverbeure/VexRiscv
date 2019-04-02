@@ -7,8 +7,7 @@ import spinal.lib.bus.amba3.apb._
 import spinal.lib.bus.misc.SizeMapping
 import spinal.lib.bus.simple._
 
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.StringBuilder
+import scala.collection.mutable._
 
 import vexriscv.plugin.{NONE, _}
 import vexriscv.{VexRiscv, VexRiscvConfig, plugin}
@@ -94,27 +93,32 @@ object CoreMarkCpuComplexConfig{
 */
 
     val configOptions = Array(
-        // Option,                  starting bit,   nr of bits, max option
-        ("BypassExecute",           0,              1,          1),
-        ("BypassMemory",            1,              1,          1),
-        ("BypassWriteBack",         2,              1,          1),
-        ("BypassWriteBackBuffer",   3,              1,          1),
-        ("Compressed",              4,              1,          1),
-        ("BranchEarly",             5,              1,          1),
-        ("Shifter",                 8,              2,          ShifterOption.values.size-1),
-        ("BranchPredicition",      10,              2,          PredictionOption.values.size-1),
-        ("Multiply",               12,              2,          MultiplyOption.values.size-1),
-        ("Divide",                 14,              2,          DivideOption.values.size-1),
-        ("Prediction",             16,              2,          PredictionOption.values.size-1)
+        // Option,                  abbreviation,   starting bit,   nr of bits, max option
+        ("BypassExecute",           "BypE",         0,              1,          1),
+        ("BypassMemory",            "BypM",         1,              1,          1),
+        ("BypassWriteBack",         "BypW",         2,              1,          1),
+        ("BypassWriteBackBuffer",   "BypWB",        3,              1,          1),
+        ("Compressed",              "C",            4,              1,          1),
+        ("BranchEarly",             "BrE",          5,              1,          1),
+        ("Shifter",                 "Shf",          8,              2,          ShifterOption.values.size-1),
+        ("Multiply",                "Mul",          12,             2,          MultiplyOption.values.size-1),
+        ("Divide",                  "Div",          14,             2,          DivideOption.values.size-1),
+        ("Prediction",              "BP",           16,             2,          PredictionOption.values.size-1)
     )
 
-    def configStr(config : CoreMarkCpuComplexConfig) : String = {
+    def shortConfigStr(configId : Long) : String = {
 
-        var str = new StringBuilder
+        val shortOptions = ListBuffer[String]()
 
-        str ++= "CoreMarkCpuComplexConfig:\n"
+        for(option <- configOptions){
+            val optionVal = ((configId >> option._3) & ((1<<(option._4))-1)).toInt
 
-        str.toString
+            shortOptions += s"${option._2}_${optionVal}"
+        }
+
+        val str = shortOptions.mkString("_")
+
+        str
     }
 
     def constructConfig(configId : Long) : CoreMarkCpuComplexConfig = {
@@ -138,11 +142,11 @@ object CoreMarkCpuComplexConfig{
         str ++= "\n"
 
         for(option <- configOptions){
-            val optionVal = ((configId >> option._2) & ((1<<(option._3))-1)).toInt
+            val optionVal = ((configId >> option._3) & ((1<<(option._4))-1)).toInt
 
-            if (optionVal > option._3){
-                printf("Option %s out of bounds (%d)!", option._1, optionVal)
-                System.exit(-1)
+            if (optionVal > option._4){
+                printf("Option %s out of bounds (%d)!\n", option._1, optionVal)
+                return null
             }
 
             option._1 match {
@@ -169,6 +173,7 @@ object CoreMarkCpuComplexConfig{
 
         val config = CoreMarkCpuComplexConfig(
             onChipRamHexFile = "src/test/cpp/coremark/coremark_O2_rv32i.hex",
+//            onChipRamHexFile = null,
             coreFrequency = 100 MHz,
             mergeIBusDBus = false,
             iBusLatency = 1,
@@ -344,7 +349,7 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig) extends Compone
 
     val mainBusArbiter = CoreMarkMasterArbiter(pipelinedMemoryBusConfig)
 
-    val onChipRamSize = 64 KiB
+    val onChipRamSize = 32 KiB
 
     val ram = new CoreMarkPipelinedMemoryBusRam(
         dualBus                   = !mergeIBusDBus,

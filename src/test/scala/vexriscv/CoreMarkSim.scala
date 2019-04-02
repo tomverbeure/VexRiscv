@@ -3,22 +3,38 @@ package coremark
 import spinal.sim._
 import spinal.core._
 import spinal.core.sim._
+import spinal.lib.eda.altera.QuartusFlow
 
-import scala.collection.mutable
+import java.io.File
+import org.apache.commons.io.FileUtils
+import scala.collection.mutable._
 
 import vexriscv.plugin._
 
 object CoreMarkSim {
 
-    def main(args: Array[String]): Unit = {
+    def runSynth(config : CoreMarkCpuComplexConfig, name : String = "CoreMarkTop") = {
 
-        val configOptions = CoreMarkCpuComplexConfig.configOptions
+        val rtl = SpinalVerilog({
+            new CoreMarkTop(config).setDefinitionName(name)
+        })
 
-        printf("%s: %d, %d\n", configOptions(0)._1,configOptions(0)._2,configOptions(0)._3)
+//        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol0.bin"), new File("quartus"))
+//        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol1.bin"), new File("quartus"))
+//        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol2.bin"), new File("quartus"))
+//        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol3.bin"), new File("quartus"))
 
-        def config = CoreMarkCpuComplexConfig.constructConfig(0x55555555)
+        QuartusFlow(
+            quartusPath = "/home/tom/altera/13.0sp1/quartus/bin/",
+            workspacePath = "quartus",
+            toplevelPath = name + ".v",
+            family = "Cyclone II",
+            device ="EP2C35F672C6"
+        )
+    }
 
-        val simSlowDown = false
+    def runSim(config : CoreMarkCpuComplexConfig, name : String = "CoreMarkTop") = {
+
         SimConfig.
             //withWave.
             allOptimisation.
@@ -52,6 +68,27 @@ object CoreMarkSim {
             printf("Duration: %d\n", ticks);
             printf("Done!\n")
             simSuccess()
+        }
+
+    }
+
+    def main(args: Array[String]): Unit = {
+
+        var validConfigIds = new ArrayBuffer[Long]()
+
+        for(configId <- 0 to 0){
+            var config = CoreMarkCpuComplexConfig.constructConfig(configId)
+            if (config != null){
+                validConfigIds += configId
+
+                if (true){
+                    val shortConfigStr = CoreMarkCpuComplexConfig.shortConfigStr(configId)
+                    runSynth(config, "CoreMarkTop_" + shortConfigStr)
+                }
+                else{
+                    runSim(config)
+                }
+            }
         }
     }
 }
