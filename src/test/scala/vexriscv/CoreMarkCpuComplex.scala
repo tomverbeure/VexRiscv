@@ -173,7 +173,6 @@ object CoreMarkCpuComplexConfig{
 
         val config = CoreMarkCpuComplexConfig(
             onChipRamHexFile = "src/test/cpp/coremark/coremark_O2_rv32i.hex",
-//            onChipRamHexFile = null,
             coreFrequency = 100 MHz,
             mergeIBusDBus = false,
             iBusLatency = 1,
@@ -317,7 +316,7 @@ object CoreMarkCpuComplexConfig{
   }
 }
 
-case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig) extends Component
+case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig, synth : Boolean = false) extends Component
 {
     import config._
 
@@ -355,7 +354,8 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig) extends Compone
         dualBus                   = !mergeIBusDBus,
         onChipRamSize             = onChipRamSize,
         onChipRamHexFile          = onChipRamHexFile,
-        pipelinedMemoryBusConfig  = pipelinedMemoryBusConfig
+        pipelinedMemoryBusConfig  = pipelinedMemoryBusConfig,
+        synth                     = synth
     )
 
     // Checkout plugins used to instanciate the CPU to connect them to the SoC
@@ -456,38 +456,62 @@ case class CoreMarkMasterArbiter(
     io.dBus.rsp.error := False
 }
 
-case class CoreMarkPipelinedMemoryBusRam(dualBus : Boolean, onChipRamSize : BigInt, onChipRamHexFile : String, pipelinedMemoryBusConfig : PipelinedMemoryBusConfig) extends Component{
+case class CoreMarkPipelinedMemoryBusRam(dualBus : Boolean, onChipRamSize : BigInt, onChipRamHexFile : String, pipelinedMemoryBusConfig : PipelinedMemoryBusConfig, synth : Boolean = false) extends Component{
     val io = new Bundle{
         val busA  =              slave(PipelinedMemoryBus(pipelinedMemoryBusConfig))
         val busB  = if (dualBus) slave(PipelinedMemoryBus(pipelinedMemoryBusConfig)) else null
     }
 
-    val ram = Mem(Bits(32 bits), onChipRamSize / 4)
+    if (!synth){
 
-    if(onChipRamHexFile != null){
-        HexTools.initRam(ram, onChipRamHexFile, 0x00000000l)
-    }
+        val ram = Mem(Bits(32 bits), onChipRamSize / 4)
 
-    io.busA.rsp.valid   := RegNext(io.busA.cmd.fire && !io.busA.cmd.write) init(False)
-    io.busA.rsp.data    := ram.readWriteSync(
-        address   = (io.busA.cmd.address >> 2).resized,
-        data      = io.busA.cmd.data,
-        enable    = io.busA.cmd.valid,
-        write     = io.busA.cmd.write,
-        mask      = io.busA.cmd.mask
-    )
-    io.busA.cmd.ready := True
+        if(onChipRamHexFile != null){
+            HexTools.initRam(ram, onChipRamHexFile, 0x00000000l)
+        }
 
-    if (dualBus) {
-        io.busB.rsp.valid   := RegNext(io.busB.cmd.fire && !io.busB.cmd.write) init(False)
-        io.busB.rsp.data    := ram.readWriteSync(
-            address   = (io.busB.cmd.address >> 2).resized,
-            data      = io.busB.cmd.data,
-            enable    = io.busB.cmd.valid,
-            write     = io.busB.cmd.write,
-            mask      = io.busB.cmd.mask
+        io.busA.rsp.valid   := RegNext(io.busA.cmd.fire && !io.busA.cmd.write) init(False)
+        io.busA.rsp.data    := ram.readWriteSync(
+            address   = (io.busA.cmd.address >> 2).resized,
+            data      = io.busA.cmd.data,
+            enable    = io.busA.cmd.valid,
+            write     = io.busA.cmd.write,
+            mask      = io.busA.cmd.mask
         )
+        io.busA.cmd.ready := True
+
+        if (dualBus) {
+            io.busB.rsp.valid   := RegNext(io.busB.cmd.fire && !io.busB.cmd.write) init(False)
+            io.busB.rsp.data    := ram.readWriteSync(
+                address   = (io.busB.cmd.address >> 2).resized,
+                data      = io.busB.cmd.data,
+                enable    = io.busB.cmd.valid,
+                write     = io.busB.cmd.write,
+                mask      = io.busB.cmd.mask
+            )
+            io.busB.cmd.ready := True
+        }
+    }
+    else{
+		val ram = new dpram_8kx32_p1p1
+		ram.io.address_a			:= (io.busA.cmd.address >> 2).resized
+		ram.io.wren_a				:= False
+		ram.io.byteena_a			:= 0
+		ram.io.data_a				:= 0
+		ram.io.q_a					<> io.busA.rsp.data
+
+        io.busA.cmd.ready := True
+		io.busA.rsp.valid := RegNext(io.busA.cmd.fire && !io.busA.cmd.write) init(False)
+
+		ram.io.address_b			:= (io.busB.cmd.address >> 2).resized
+		ram.io.wren_b				:= io.busB.cmd.valid & io.busB.cmd.write
+		ram.io.byteena_b			:= io.busB.cmd.mask
+		ram.io.data_b				:= io.busB.cmd.data
+		ram.io.q_b					<> io.busB.rsp.data
+
         io.busB.cmd.ready := True
+		io.busB.rsp.valid := RegNext(io.busB.cmd.fire && !io.busB.cmd.write) init(False)
+
     }
 
 }
@@ -530,7 +554,7 @@ class CoreMarkPipelinedMemoryBusDecoder(
     }
 }
 
-case class CoreMarkTop(config : CoreMarkCpuComplexConfig) extends Component{
+case class CoreMarkTop(config : CoreMarkCpuComplexConfig, synth : Boolean = false) extends Component{
     import config._
 
     val io = new Bundle {
@@ -572,7 +596,78 @@ case class CoreMarkTop(config : CoreMarkCpuComplexConfig) extends Component{
 
     val system = new ClockingArea(systemClockDomain) {
 
-        val cpuComplex = new CoreMarkCpuComplex(config)
+        val cpuComplex = new CoreMarkCpuComplex(config = config, synth = synth)
         cpuComplex.io.apb <> io.apb
     }
 }
+
+class dpram_8kx32_p1p1 extends BlackBox {
+
+    val io = new Bundle {
+        val clock           = in(Bool)
+        val address_a       = in(UInt(14 bits))
+        val wren_a          = in(Bool)
+        val byteena_a       = in(Bits(4 bits))
+        val data_a          = in(Bits(32 bits))
+        val q_a             = out(Bits(32 bits))
+
+        val address_b       = in(UInt(16 bits))
+        val wren_b          = in(Bool)
+        val byteena_b       = in(Bits(4 bits))
+        val data_b          = in(Bits(32 bits))
+        val q_b             = out(Bits(32 bits))
+    }
+
+    mapCurrentClockDomain(io.clock)
+    noIoPrefix()
+
+    addRTLPath("./primitives/cyclone2/dpram_8kx32_p1p1/dpram_8kx32_p1p1.v")
+}
+
+class dpram_8kx32_p2p1 extends BlackBox {
+
+    val io = new Bundle {
+        val clock           = in(Bool)
+        val address_a       = in(UInt(14 bits))
+        val wren_a          = in(Bool)
+        val byteena_a       = in(Bits(4 bits))
+        val data_a          = in(Bits(32 bits))
+        val q_a             = out(Bits(32 bits))
+
+        val address_b       = in(UInt(16 bits))
+        val wren_b          = in(Bool)
+        val byteena_b       = in(Bits(4 bits))
+        val data_b          = in(Bits(32 bits))
+        val q_b             = out(Bits(32 bits))
+    }
+
+    mapCurrentClockDomain(io.clock)
+    noIoPrefix()
+
+    addRTLPath("./primitives/cyclone2/dpram_8kx32_p2p1/dpram_8kx32_p2p1.v")
+}
+
+class dpram_8kx32_p1p2 extends BlackBox {
+
+    val io = new Bundle {
+        val clock           = in(Bool)
+        val address_a       = in(UInt(14 bits))
+        val wren_a          = in(Bool)
+        val byteena_a       = in(Bits(4 bits))
+        val data_a          = in(Bits(32 bits))
+        val q_a             = out(Bits(32 bits))
+
+        val address_b       = in(UInt(16 bits))
+        val wren_b          = in(Bool)
+        val byteena_b       = in(Bits(4 bits))
+        val data_b          = in(Bits(32 bits))
+        val q_b             = out(Bits(32 bits))
+    }
+
+    mapCurrentClockDomain(io.clock)
+    noIoPrefix()
+
+    addRTLPath("./primitives/cyclone2/dpram_8kx32_p2p1/dpram_8kx32_p1p2.v")
+}
+
+

@@ -16,7 +16,7 @@ object CoreMarkSim {
     def runSynth(config : CoreMarkCpuComplexConfig, name : String = "CoreMarkTop") = {
 
         val rtl = SpinalVerilog({
-            new CoreMarkTop(config).setDefinitionName(name)
+            new CoreMarkTop(config, synth = true).setDefinitionName(name)
         })
 
 //        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol0.bin"), new File("quartus"))
@@ -24,13 +24,15 @@ object CoreMarkSim {
 //        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol2.bin"), new File("quartus"))
 //        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol3.bin"), new File("quartus"))
 
+/*
         QuartusFlow(
             quartusPath = "/home/tom/altera/13.0sp1/quartus/bin/",
             workspacePath = "quartus",
             toplevelPath = name + ".v",
             family = "Cyclone II",
-            device ="EP2C35F672C6"
+            device ="EP2C70F672C6"
         )
+*/
     }
 
     def runSim(config : CoreMarkCpuComplexConfig, name : String = "CoreMarkTop") = {
@@ -38,7 +40,7 @@ object CoreMarkSim {
         SimConfig.
             //withWave.
             allOptimisation.
-            compile(new CoreMarkTop(config)).
+            compile(new CoreMarkTop(config, synth = false)).
             doSimUntilVoid
         {dut =>
 
