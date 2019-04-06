@@ -14,13 +14,14 @@ import vexriscv.{VexRiscv, VexRiscvConfig, plugin}
 import vexriscv.demo._
 
 case class CoreMarkCpuComplexConfig(
-                  onChipRamHexFile  : String,
-                  coreFrequency     : HertzNumber,
-                  mergeIBusDBus     : Boolean,
-                  iBusLatency       : Int,
-                  dBusLatency       : Int,
-                  apb3Config        : Apb3Config,
-                  cpuPlugins        : ArrayBuffer[Plugin[VexRiscv]])
+                  onChipRamHexFile  	: String,
+                  coreFrequency     	: HertzNumber,
+                  mergeIBusDBus     	: Boolean,
+                  iBusLatency       	: Int,
+                  dBusLatency       	: Int,
+                  apb3Config        	: Apb3Config,
+				  writeBackStage		: Boolean,
+                  cpuPlugins        	: ArrayBuffer[Plugin[VexRiscv]])
 {
     require(iBusLatency >=1, "iBusLatency must be >= 1")
     require(dBusLatency >=1, "dBusLatency must be >= 1")
@@ -75,31 +76,15 @@ object CoreMarkCpuComplexConfig{
         val DynamicTarget   = Value(3)
     }
 
-/*
-    case class Params(
-                  bypassExecute             : Boolean,
-                  bypassMemory              : Boolean,
-                  bypassWriteBack           : Boolean,
-                  bypassWriteBackBuffer     : Boolean,
-                  barrelShifter             : Boolean,
-                  multiply                  : MultiplyOption,
-                  divide                    : DivideOption,
-                  shifter                   : ShifterOption,
-                  prediction                : PredictionOption,
-                  compressed                : Boolean
-                )
-    {
-    }
-*/
-
     val configOptions = Array(
         // Option,                  abbreviation,   starting bit,   nr of bits, max option
-        ("BypassExecute",           "BypE",         0,              1,          1),
-        ("BypassMemory",            "BypM",         1,              1,          1),
-        ("BypassWriteBack",         "BypW",         2,              1,          1),
-        ("BypassWriteBackBuffer",   "BypWB",        3,              1,          1),
-        ("Compressed",              "C",            4,              1,          1),
-        ("BranchEarly",             "BrE",          5,              1,          1),
+        ("WriteBackStage",          "WB",           0,              1,          1),
+        ("BypassExecute",           "BypE",         1,              1,          1),
+        ("BypassMemory",            "BypM",         2,              1,          1),
+        ("BypassWriteBack",         "BypW",         3,              1,          1),
+        ("BypassWriteBackBuffer",   "BypWB",        4,              1,          1),
+        ("Compressed",              "C",            5,              1,          1),
+        ("BranchEarly",             "BrE",          6,              1,          1),
         ("Shifter",                 "Shf",          8,              2,          ShifterOption.values.size-1),
         ("Multiply",                "Mul",          12,             2,          MultiplyOption.values.size-1),
         ("Divide",                  "Div",          14,             2,          DivideOption.values.size-1),
@@ -123,6 +108,7 @@ object CoreMarkCpuComplexConfig{
 
     def constructConfig(configId : Long) : CoreMarkCpuComplexConfig = {
 
+		var writeBackStage		 	  = true
         var bypassExecute             = false
         var bypassMemory              = false
         var bypassWriteBack           = false
@@ -150,6 +136,7 @@ object CoreMarkCpuComplexConfig{
             }
 
             option._1 match {
+				case "WriteBackStage"		  => { writeBackStage         = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
                 case "BypassExecute"          => { bypassExecute          = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
                 case "BypassMemory"           => { bypassMemory           = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
                 case "BypassWriteBack"        => { bypassWriteBack        = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
@@ -177,6 +164,7 @@ object CoreMarkCpuComplexConfig{
             mergeIBusDBus = false,
             iBusLatency = 1,
             dBusLatency = 1,
+			writeBackStage = writeBackStage,
             apb3Config = Apb3Config(
                 addressWidth = 20,
                 dataWidth = 32
@@ -252,6 +240,7 @@ object CoreMarkCpuComplexConfig{
         mergeIBusDBus = false,
         iBusLatency = 1,
         dBusLatency = 1,
+		writeBackStage = true,
         apb3Config = Apb3Config(
             addressWidth = 20,
             dataWidth = 32
@@ -300,38 +289,24 @@ object CoreMarkCpuComplexConfig{
         )
     )
 
-  def fast = {
-      val config = default
-
-      // Replace HazardSimplePlugin to get datapath bypass
-      config.cpuPlugins(config.cpuPlugins.indexWhere(_.isInstanceOf[HazardSimplePlugin])) = new HazardSimplePlugin(
-          bypassExecute           = true,
-          bypassMemory            = true,
-          bypassWriteBack         = true,
-          bypassWriteBackBuffer   = true
-    )
-//    config.cpuPlugins(config.cpuPlugins.indexWhere(_.isInstanceOf[LightShifterPlugin])) = new FullBarrelShifterPlugin()
-
-    config
-  }
 }
 
 case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig, synth : Boolean = false) extends Component
 {
-    import config._
-
     val io = new Bundle {
         val apb     = master(Apb3(config.apb3Config))
     }
 
     val pipelinedMemoryBusConfig = PipelinedMemoryBusConfig(
-        addressWidth = 32,
-        dataWidth = 32
+        addressWidth 	= 32,
+        dataWidth 		= 32
     )
 
     val cpu = new VexRiscv(
         config = VexRiscvConfig(
-            plugins = cpuPlugins
+			withMemoryStage 		= true,
+			withWriteBackStage 		= config.writeBackStage,
+            plugins 				= config.cpuPlugins
         )
     )
 
@@ -351,9 +326,9 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig, synth : Boolean
     val onChipRamSize = 32 KiB
 
     val ram = new CoreMarkPipelinedMemoryBusRam(
-        dualBus                   = !mergeIBusDBus,
+        dualBus                   = !config.mergeIBusDBus,
         onChipRamSize             = onChipRamSize,
-        onChipRamHexFile          = onChipRamHexFile,
+        onChipRamHexFile          = config.onChipRamHexFile,
         pipelinedMemoryBusConfig  = pipelinedMemoryBusConfig,
         synth                     = synth
     )
@@ -361,7 +336,7 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig, synth : Boolean
     // Checkout plugins used to instanciate the CPU to connect them to the SoC
     for(plugin <- cpu.plugins) plugin match{
         case plugin : IBusSimplePlugin =>
-            if (mergeIBusDBus)
+            if (config.mergeIBusDBus)
                 mainBusArbiter.io.iBus <> plugin.iBus
             else {
                 mainBusArbiter.io.iBus.cmd.valid    := False

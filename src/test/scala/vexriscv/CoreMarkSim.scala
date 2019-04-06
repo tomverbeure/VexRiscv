@@ -78,12 +78,12 @@ object CoreMarkSim {
 
         var validConfigIds = new ArrayBuffer[Long]()
 
-        for(configId <- 0 to 0){
+        for(configId <- 1 to 1){
             var config = CoreMarkCpuComplexConfig.constructConfig(configId)
             if (config != null){
                 validConfigIds += configId
 
-                if (true){
+                if (false){
                     val shortConfigStr = CoreMarkCpuComplexConfig.shortConfigStr(configId)
                     runSynth(config, "CoreMarkTop_" + shortConfigStr)
                 }
