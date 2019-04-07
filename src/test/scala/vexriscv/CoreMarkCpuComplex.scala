@@ -20,6 +20,7 @@ case class CoreMarkCpuComplexConfig(
                   iBusLatency       	: Int,
                   dBusLatency       	: Int,
                   apb3Config        	: Apb3Config,
+				  memoryStage			: Boolean,
 				  writeBackStage		: Boolean,
                   cpuPlugins        	: ArrayBuffer[Plugin[VexRiscv]])
 {
@@ -78,17 +79,18 @@ object CoreMarkCpuComplexConfig{
 
     val configOptions = Array(
         // Option,                  abbreviation,   starting bit,   nr of bits, max option
-        ("WriteBackStage",          "WB",           0,              1,          1),
-        ("BypassExecute",           "BypE",         1,              1,          1),
-        ("BypassMemory",            "BypM",         2,              1,          1),
-        ("BypassWriteBack",         "BypW",         3,              1,          1),
-        ("BypassWriteBackBuffer",   "BypWB",        4,              1,          1),
-        ("Compressed",              "C",            5,              1,          1),
-        ("BranchEarly",             "BrE",          6,              1,          1),
-        ("Shifter",                 "Shf",          8,              2,          ShifterOption.values.size-1),
-        ("Multiply",                "Mul",          12,             2,          MultiplyOption.values.size-1),
-        ("Divide",                  "Div",          14,             2,          DivideOption.values.size-1),
-        ("Prediction",              "BP",           16,             2,          PredictionOption.values.size-1)
+        ("WriteBackStage",          "WBS",          0,              1,          1),
+        ("MemoryStage",             "MS",           1,              1,          1),
+        ("BypassExecute",           "BypE",         2,              1,          1),
+        ("BypassMemory",            "BypM",         3,              1,          1),
+        ("BypassWriteBack",         "BypW",         4,              1,          1),
+        ("BypassWriteBackBuffer",   "BypWB",        5,              1,          1),
+        ("Compressed",              "C",            6,              1,          1),
+        ("BranchEarly",             "BrE",          7,              1,          1),
+        ("Shifter",                 "Shf",          16,             2,          ShifterOption.values.size-1),
+        ("Multiply",                "Mul",          18,             2,          MultiplyOption.values.size-1),
+        ("Divide",                  "Div",          20,             2,          DivideOption.values.size-1),
+        ("Prediction",              "BP",           22,             2,          PredictionOption.values.size-1)
     )
 
     def shortConfigStr(configId : Long) : String = {
@@ -108,7 +110,8 @@ object CoreMarkCpuComplexConfig{
 
     def constructConfig(configId : Long) : CoreMarkCpuComplexConfig = {
 
-		var writeBackStage		 	  = true
+        var writeBackStage            = true
+        var memoryStage               = true
         var bypassExecute             = false
         var bypassMemory              = false
         var bypassWriteBack           = false
@@ -136,7 +139,8 @@ object CoreMarkCpuComplexConfig{
             }
 
             option._1 match {
-				case "WriteBackStage"		  => { writeBackStage         = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
+                case "WriteBackStage"         => { writeBackStage         = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
+                case "MemoryStage"            => { memoryStage            = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
                 case "BypassExecute"          => { bypassExecute          = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
                 case "BypassMemory"           => { bypassMemory           = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
                 case "BypassWriteBack"        => { bypassWriteBack        = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
@@ -164,6 +168,7 @@ object CoreMarkCpuComplexConfig{
             mergeIBusDBus = false,
             iBusLatency = 1,
             dBusLatency = 1,
+			memoryStage = memoryStage,
 			writeBackStage = writeBackStage,
             apb3Config = Apb3Config(
                 addressWidth = 20,
@@ -240,6 +245,7 @@ object CoreMarkCpuComplexConfig{
         mergeIBusDBus = false,
         iBusLatency = 1,
         dBusLatency = 1,
+		memoryStage = true,
 		writeBackStage = true,
         apb3Config = Apb3Config(
             addressWidth = 20,
@@ -304,7 +310,7 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig, synth : Boolean
 
     val cpu = new VexRiscv(
         config = VexRiscvConfig(
-			withMemoryStage 		= true,
+			withMemoryStage 		= config.memoryStage,
 			withWriteBackStage 		= config.writeBackStage,
             plugins 				= config.cpuPlugins
         )

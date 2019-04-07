@@ -78,7 +78,7 @@ object CoreMarkSim {
 
         var validConfigIds = new ArrayBuffer[Long]()
 
-        for(configId <- 1 to 1){
+        for(configId <- 3 to 3){
             var config = CoreMarkCpuComplexConfig.constructConfig(configId)
             if (config != null){
                 validConfigIds += configId
