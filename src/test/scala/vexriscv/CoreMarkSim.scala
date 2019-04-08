@@ -79,7 +79,7 @@ object CoreMarkSim {
 		val params = CoreMarkParameters().withArgs(args)
 		val config = params.toCoreMarkCpuComplexConfig() 
 
-		println(params.toShortStr)
+		println(params.toShortStr())
 		println(params.toLongStr)
 
         if (false){

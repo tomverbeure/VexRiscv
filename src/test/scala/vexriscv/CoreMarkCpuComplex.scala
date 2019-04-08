@@ -9,6 +9,8 @@ import spinal.lib.bus.simple._
 
 import scala.collection.mutable._
 
+import java.nio.file.{Paths,Files}
+
 import vexriscv.plugin.{NONE, _}
 import vexriscv.{VexRiscv, VexRiscvConfig, plugin}
 import vexriscv.demo._
@@ -49,14 +51,22 @@ object PredictionOption extends Enumeration {
     val DynamicTarget   = Value(3)
 }
 
+object OptimizationOption extends Enumeration {
+    type OptimizationOption = Value
+    val Os              = Value(0)
+    val O2              = Value(1)
+    val O3              = Value(2)
+}
+
 import PipelineOption.PipelineOption
 import MultiplyOption.MultiplyOption
 import DivideOption.DivideOption
 import ShifterOption.ShifterOption
 import PredictionOption.PredictionOption
+import OptimizationOption.OptimizationOption
 
 case class CoreMarkParameters(
-                pipeline                  : PipelineOption      = PipelineOption.ExeMemWb, 
+                pipeline                  : PipelineOption      = PipelineOption.ExeMemWb,
                 bypassExecute             : Boolean             = false,
                 bypassMemory              : Boolean             = false,
                 bypassWriteBack           : Boolean             = false,
@@ -67,19 +77,62 @@ case class CoreMarkParameters(
                 divide                    : DivideOption        = DivideOption.None,
                 shifter                   : ShifterOption       = ShifterOption.Iterative,
                 prediction                : PredictionOption    = PredictionOption.None,
-                mergeIBusDBus             : Boolean             = false
+                mergeIBusDBus             : Boolean             = false,
+                optimization              : OptimizationOption  = OptimizationOption.O2
 		)
 {
 
-    def withArgs(args : Seq[String]) = this.copy(
-        bypassExecute           = args.contains("--BypE=1"),
-        bypassMemory            = args.contains("--BypM=1"),
-        bypassWriteBack         = args.contains("--BypW=1"),
-        bypassWriteBackBuffer   = args.contains("--BypWB=1"),
-        compressed              = args.contains("--C=1"),
-        branchEarly             = args.contains("--BrE=1"),
-        mergeIBusDBus           = args.contains("--MergeIBDB=1")
-    )
+    def withArgs(args : Seq[String]) = {
+        var pipeline                = this.pipeline
+        var bypassExecute           = this.bypassExecute
+        var bypassMemory            = this.bypassMemory
+        var bypassWriteBack         = this.bypassWriteBack
+        var bypassWriteBackBuffer   = this.bypassWriteBackBuffer
+        var compressed              = this.compressed
+        var branchEarly             = this.branchEarly
+        var multiply                = this.multiply
+        var divide                  = this.divide
+        var shifter                 = this.shifter
+        var prediction              = this.prediction
+        var mergeIBusDBus           = this.mergeIBusDBus
+        var optimization            = this.optimization
+
+        for(arg <- args.toList){
+            val opt_val = arg.split("=").map(_.trim)
+
+            opt_val(0) match {
+                case "--Pipe"       => pipeline                 = PipelineOption(opt_val(1).toInt)
+                case "--BypE"       => bypassExecute            = (opt_val(1) == "1")
+                case "--BypM"       => bypassMemory             = (opt_val(1) == "1")
+                case "--BypW"       => bypassWriteBack          = (opt_val(1) == "1")
+                case "--BypWB"      => bypassWriteBackBuffer    = (opt_val(1) == "1")
+                case "--C"          => compressed               = (opt_val(1) == "1")
+                case "--BrE"        => branchEarly              = (opt_val(1) == "1")
+                case "--Mul"        => multiply                 = MultiplyOption(opt_val(1).toInt)
+                case "--Div"        => divide                   = DivideOption(opt_val(1).toInt)
+                case "--Shft"       => shifter                  = ShifterOption(opt_val(1).toInt)
+                case "--BP"         => prediction               = PredictionOption(opt_val(1).toInt)
+                case "--MergeIBDB"  => mergeIBusDBus            = (opt_val(1) == "1")
+                case "--Opt"        => optimization             = OptimizationOption(opt_val(1).toInt)
+            }
+        }
+
+        this.copy(
+            pipeline                = pipeline,
+            bypassExecute           = bypassExecute,
+            bypassMemory            = bypassMemory,
+            bypassWriteBack         = bypassWriteBack,
+            bypassWriteBackBuffer   = bypassWriteBackBuffer,
+            compressed              = compressed,
+            branchEarly             = branchEarly,
+            multiply                = multiply,
+            divide                  = divide,
+            shifter                 = shifter,
+            prediction              = prediction,
+            mergeIBusDBus           = mergeIBusDBus,
+            optimization            = optimization
+        )
+    }
 
     def toCoreMarkCpuComplexConfig() = {
 
@@ -104,18 +157,29 @@ case class CoreMarkParameters(
             ucycleAccess        = CsrAccess.READ_ONLY
         )
 
+        val optimizationStr = optimization match {
+                                case OptimizationOption.Os          => "Os"
+                                case OptimizationOption.O2          => "O2"
+                                case OptimizationOption.O3          => "O3"
+                            }
+        val compressedStr = if (compressed) "c" else ""
+        val multiplyStr = if (multiply == MultiplyOption.None) "" else "m"
+
+        val hexFilename = s"src/test/cpp/coremark/coremark_${optimizationStr}_rv32i${multiplyStr}${compressedStr}.hex"
+        assert(Files.exists(Paths.get(hexFilename)), s"File doesn't exist: ${hexFilename}")
+
         val config = CoreMarkCpuComplexConfig(
-            onChipRamHexFile            = "src/test/cpp/coremark/coremark_O2_rv32i.hex",
+            onChipRamHexFile            = hexFilename,
             coreFrequency               = 100 MHz,
-            mergeIBusDBus               = false,
+            mergeIBusDBus               = mergeIBusDBus,
             iBusLatency                 = 1,
             dBusLatency                 = 1,
-			memoryStage                 = pipeline match { 
+			memoryStage                 = pipeline match {
                                             case PipelineOption.ExeMemWb      => true
                                             case PipelineOption.ExeMem        => true
                                             case PipelineOption.Exe           => false
                                           },
-			writeBackStage              = pipeline match { 
+			writeBackStage              = pipeline match {
                                             case PipelineOption.ExeMemWb      => true
                                             case PipelineOption.ExeMem        => false
                                             case PipelineOption.Exe           => false
@@ -188,23 +252,25 @@ case class CoreMarkParameters(
         config
     }
 
-    def toShortStr : String = {
+    def toShortStr(assignChar : Char = '=', separatorChar : Char = ' ') : String = {
 
         val options = ListBuffer[String]()
 
-        options += s"Pipe_${ pipeline.toString }"
-        options += s"BypE_${ bypassExecute.compare(false)}"
-        options += s"BypM_${ bypassMemory.compare(false)}"
-        options += s"BypW_${ bypassWriteBack.compare(false) }"
-        options += s"BypWB_${ bypassWriteBackBuffer.compare(false) }"
-        options += s"C_${ compressed.compare(false) }"
-        options += s"BrE_${ branchEarly.compare(false) }"
-        options += s"Mul_${ multiply.toString }"
-        options += s"Div_${ divide.toString }"
-        options += s"BP_${ prediction.toString }"
-        options += s"MergeIBDB_${ mergeIBusDBus.compare(false) }"
+        options += s"Pipe${ assignChar }${ pipeline.toString }"
+        options += s"BypE${ assignChar }${ bypassExecute.compare(false)}"
+        options += s"BypM${ assignChar }${ bypassMemory.compare(false)}"
+        options += s"BypW${ assignChar }${ bypassWriteBack.compare(false) }"
+        options += s"BypWB${ assignChar }${ bypassWriteBackBuffer.compare(false) }"
+        options += s"C${ assignChar }${ compressed.compare(false) }"
+        options += s"BrE${ assignChar }${ branchEarly.compare(false) }"
+        options += s"Mul${ assignChar }${ multiply.toString }"
+        options += s"Div${ assignChar }${ divide.toString }"
+        options += s"Shft${ assignChar }${ shifter.toString }"
+        options += s"BP${ assignChar }${ prediction.toString }"
+        options += s"MergeIBDB${ assignChar }${ mergeIBusDBus.compare(false) }"
+        options += s"Opt${ assignChar }${ optimization.toString }"
 
-        val str = options.mkString("_")
+        val str = options.mkString(separatorChar.toString)
 
         str
     }
@@ -221,8 +287,10 @@ case class CoreMarkParameters(
         options += s"BranchEarly         : ${ branchEarly.compare(false) }"
         options += s"Multiply            : ${ multiply.toString }"
         options += s"Divide              : ${ divide.toString }"
+        options += s"Shifter             : ${ shifter.toString }"
         options += s"BranchPrediction    : ${ prediction.toString }"
         options += s"MergeIBusDBus       : ${ mergeIBusDBus.compare(false) }"
+        options += s"Optimization        : ${ optimization.toString }"
 
         val str = options.mkString("\n")
 
