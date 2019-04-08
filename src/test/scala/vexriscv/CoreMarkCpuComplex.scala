@@ -58,12 +58,19 @@ object OptimizationOption extends Enumeration {
     val O3              = Value(2)
 }
 
+object GccVersionOption extends Enumeration {
+    type GccVersionOption = Value
+    val Ver7_2_0        = Value(0)
+    val Ver8_2_0        = Value(1)
+}
+
 import PipelineOption.PipelineOption
 import MultiplyOption.MultiplyOption
 import DivideOption.DivideOption
 import ShifterOption.ShifterOption
 import PredictionOption.PredictionOption
 import OptimizationOption.OptimizationOption
+import GccVersionOption.GccVersionOption
 
 case class CoreMarkParameters(
                 pipeline                  : PipelineOption      = PipelineOption.ExeMemWb,
@@ -78,7 +85,8 @@ case class CoreMarkParameters(
                 shifter                   : ShifterOption       = ShifterOption.Iterative,
                 prediction                : PredictionOption    = PredictionOption.None,
                 mergeIBusDBus             : Boolean             = false,
-                optimization              : OptimizationOption  = OptimizationOption.O2
+                optimization              : OptimizationOption  = OptimizationOption.O2,
+                gccVersion                : GccVersionOption    = GccVersionOption.Ver7_2_0
 		)
 {
 
@@ -96,6 +104,7 @@ case class CoreMarkParameters(
         var prediction              = this.prediction
         var mergeIBusDBus           = this.mergeIBusDBus
         var optimization            = this.optimization
+        var gccVersion              = this.gccVersion
 
         for(arg <- args.toList){
             val opt_val = arg.split("=").map(_.trim)
@@ -114,6 +123,7 @@ case class CoreMarkParameters(
                 case "--BP"         => prediction               = PredictionOption(opt_val(1).toInt)
                 case "--MergeIBDB"  => mergeIBusDBus            = (opt_val(1) == "1")
                 case "--Opt"        => optimization             = OptimizationOption(opt_val(1).toInt)
+                case "--Gcc"        => gccVersion               = GccVersionOption(opt_val(1).toInt)
             }
         }
 
@@ -130,7 +140,8 @@ case class CoreMarkParameters(
             shifter                 = shifter,
             prediction              = prediction,
             mergeIBusDBus           = mergeIBusDBus,
-            optimization            = optimization
+            optimization            = optimization,
+            gccVersion              = gccVersion
         )
     }
 
@@ -157,6 +168,10 @@ case class CoreMarkParameters(
             ucycleAccess        = CsrAccess.READ_ONLY
         )
 
+        val gccVersionStr = gccVersion match {
+                                case GccVersionOption.Ver7_2_0      => "7.2.0"
+                                case GccVersionOption.Ver8_2_0      => "8.2.0"
+                            }
         val optimizationStr = optimization match {
                                 case OptimizationOption.Os          => "Os"
                                 case OptimizationOption.O2          => "O2"
@@ -165,7 +180,7 @@ case class CoreMarkParameters(
         val compressedStr = if (compressed) "c" else ""
         val multiplyStr = if (multiply == MultiplyOption.None) "" else "m"
 
-        val hexFilename = s"src/test/cpp/coremark/coremark_${optimizationStr}_rv32i${multiplyStr}${compressedStr}.hex"
+        val hexFilename = s"src/test/cpp/coremark/${gccVersionStr}/coremark_${optimizationStr}_rv32i${multiplyStr}${compressedStr}.hex"
         assert(Files.exists(Paths.get(hexFilename)), s"File doesn't exist: ${hexFilename}")
 
         val config = CoreMarkCpuComplexConfig(
@@ -269,6 +284,7 @@ case class CoreMarkParameters(
         options += s"BP${ assignChar }${ prediction.toString }"
         options += s"MergeIBDB${ assignChar }${ mergeIBusDBus.compare(false) }"
         options += s"Opt${ assignChar }${ optimization.toString }"
+        options += s"Gcc${ assignChar }${ gccVersion.toString }"
 
         val str = options.mkString(separatorChar.toString)
 
@@ -291,6 +307,7 @@ case class CoreMarkParameters(
         options += s"BranchPrediction    : ${ prediction.toString }"
         options += s"MergeIBusDBus       : ${ mergeIBusDBus.compare(false) }"
         options += s"Optimization        : ${ optimization.toString }"
+        options += s"GccVersion          : ${ gccVersion.toString }"
 
         val str = options.mkString("\n")
 
