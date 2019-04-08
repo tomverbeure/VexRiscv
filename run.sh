@@ -6,4 +6,4 @@
 
 #sbt "runMain vexriscv.demo.GenFullNoMmuNoCacheSimpleMul"
 
-sbt "test:runMain coremark.CoreMarkSim"
+sbt "test:runMain coremark.CoreMarkSim --BypE=1"
