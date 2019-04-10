@@ -76,21 +76,19 @@ object CoreMarkSim {
 
     def main(args: Array[String]): Unit = {
 
-        var validConfigIds = new ArrayBuffer[Long]()
+		val params = CoreMarkParameters().withArgs(args)
+		val config = params.toCoreMarkCpuComplexConfig() 
 
-        for(configId <- 1 to 1){
-            var config = CoreMarkCpuComplexConfig.constructConfig(configId)
-            if (config != null){
-                validConfigIds += configId
+		println(params.toShortStr())
+		println(params.toLongStr)
 
-                if (false){
-                    val shortConfigStr = CoreMarkCpuComplexConfig.shortConfigStr(configId)
-                    runSynth(config, "CoreMarkTop_" + shortConfigStr)
-                }
-                else{
-                    runSim(config)
-                }
-            }
+        if (false){
+            runSynth(config, "CoreMarkTop")
         }
+        else{
+            runSim(config)
+        }
+
     }
+
 }

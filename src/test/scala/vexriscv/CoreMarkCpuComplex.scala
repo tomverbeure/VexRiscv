@@ -9,169 +9,203 @@ import spinal.lib.bus.simple._
 
 import scala.collection.mutable._
 
+import java.nio.file.{Paths,Files}
+
 import vexriscv.plugin.{NONE, _}
 import vexriscv.{VexRiscv, VexRiscvConfig, plugin}
 import vexriscv.demo._
 
-case class CoreMarkCpuComplexConfig(
-                  onChipRamHexFile  	: String,
-                  coreFrequency     	: HertzNumber,
-                  mergeIBusDBus     	: Boolean,
-                  iBusLatency       	: Int,
-                  dBusLatency       	: Int,
-                  apb3Config        	: Apb3Config,
-				  writeBackStage		: Boolean,
-                  cpuPlugins        	: ArrayBuffer[Plugin[VexRiscv]])
-{
-    require(iBusLatency >=1, "iBusLatency must be >= 1")
-    require(dBusLatency >=1, "dBusLatency must be >= 1")
+object PipelineOption extends Enumeration {
+    type PipelineOption = Value
+    val ExeMemWb        = Value(0)
+    val ExeMem          = Value(1)
+    val Exe             = Value(2)
 }
 
+object MultiplyOption extends Enumeration {
+    type MultiplyOption = Value
+    val None            = Value(0)
+    val Iterative       = Value(1)
+    val Simple          = Value(2)
+}
 
-object CoreMarkCpuComplexConfig{
+object DivideOption extends Enumeration {
+    type DivideOption = Value
+    val None            = Value(0)
+    val Iterative       = Value(1)
+    val IterativeDhry   = Value(2)
+}
 
-    val ucycleCsrConfig =  CsrPluginConfig(
-        catchIllegalAccess  = false,
-        mvendorid           = null,
-        marchid             = null,
-        mimpid              = null,
-        mhartid             = null,
-        misaExtensionsInit  = 66,
-        misaAccess          = CsrAccess.NONE,
-        mtvecAccess         = CsrAccess.NONE,
-        mtvecInit           = 0x00000020l,
-        mepcAccess          = CsrAccess.NONE,
-        mscratchGen         = false,
-        mcauseAccess        = CsrAccess.READ_ONLY,
-        mbadaddrAccess      = CsrAccess.NONE,
-        mcycleAccess        = CsrAccess.NONE,
-        minstretAccess      = CsrAccess.NONE,
-        ecallGen            = false,
-        wfiGenAsWait        = false,
-        ucycleAccess        = CsrAccess.READ_ONLY
-    )
+object ShifterOption extends Enumeration {
+    type ShifterOption = Value
+    val Iterative       = Value(0)
+    val BarrelExe       = Value(1)
+    val BarrelMem       = Value(2)
+}
 
-    object MultiplyOption extends Enumeration {
-        val None            = Value(0)
-        val Iterative       = Value(1)
-        val Simple          = Value(2)
-    }
+object PredictionOption extends Enumeration {
+    type PredictionOption = Value
+    val None            = Value(0)
+    val Static          = Value(1)
+    val Dynamic         = Value(2)
+    val DynamicTarget   = Value(3)
+}
 
-    object DivideOption extends Enumeration {
-        val None            = Value(0)
-        val Iterative       = Value(1)
-        val IterativeDhry   = Value(2)
-    }
+object OptimizationOption extends Enumeration {
+    type OptimizationOption = Value
+    val Os              = Value(0)
+    val O2              = Value(1)
+    val O3              = Value(2)
+}
 
-    object ShifterOption extends Enumeration {
-        val Iterative       = Value(0)
-        val BarrelExe       = Value(1)
-        val BarrelMem       = Value(2)
-    }
+object GccVersionOption extends Enumeration {
+    type GccVersionOption = Value
+    val Ver7_2_0        = Value(0)
+    val Ver8_2_0        = Value(1)
+}
 
-    object PredictionOption extends Enumeration {
-        val None            = Value(0)
-        val Static          = Value(1)
-        val Dynamic         = Value(2)
-        val DynamicTarget   = Value(3)
-    }
+import PipelineOption.PipelineOption
+import MultiplyOption.MultiplyOption
+import DivideOption.DivideOption
+import ShifterOption.ShifterOption
+import PredictionOption.PredictionOption
+import OptimizationOption.OptimizationOption
+import GccVersionOption.GccVersionOption
 
-    val configOptions = Array(
-        // Option,                  abbreviation,   starting bit,   nr of bits, max option
-        ("WriteBackStage",          "WB",           0,              1,          1),
-        ("BypassExecute",           "BypE",         1,              1,          1),
-        ("BypassMemory",            "BypM",         2,              1,          1),
-        ("BypassWriteBack",         "BypW",         3,              1,          1),
-        ("BypassWriteBackBuffer",   "BypWB",        4,              1,          1),
-        ("Compressed",              "C",            5,              1,          1),
-        ("BranchEarly",             "BrE",          6,              1,          1),
-        ("Shifter",                 "Shf",          8,              2,          ShifterOption.values.size-1),
-        ("Multiply",                "Mul",          12,             2,          MultiplyOption.values.size-1),
-        ("Divide",                  "Div",          14,             2,          DivideOption.values.size-1),
-        ("Prediction",              "BP",           16,             2,          PredictionOption.values.size-1)
-    )
+case class CoreMarkParameters(
+                pipeline                  : PipelineOption      = PipelineOption.ExeMemWb,
+                bypassExecute             : Boolean             = false,
+                bypassMemory              : Boolean             = false,
+                bypassWriteBack           : Boolean             = false,
+                bypassWriteBackBuffer     : Boolean             = false,
+                compressed                : Boolean             = false,
+                branchEarly               : Boolean             = false,
+                multiply                  : MultiplyOption      = MultiplyOption.None,
+                divide                    : DivideOption        = DivideOption.None,
+                shifter                   : ShifterOption       = ShifterOption.Iterative,
+                prediction                : PredictionOption    = PredictionOption.None,
+                mergeIBusDBus             : Boolean             = false,
+                optimization              : OptimizationOption  = OptimizationOption.O2,
+                gccVersion                : GccVersionOption    = GccVersionOption.Ver7_2_0
+		)
+{
 
-    def shortConfigStr(configId : Long) : String = {
+    def withArgs(args : Seq[String]) = {
+        var pipeline                = this.pipeline
+        var bypassExecute           = this.bypassExecute
+        var bypassMemory            = this.bypassMemory
+        var bypassWriteBack         = this.bypassWriteBack
+        var bypassWriteBackBuffer   = this.bypassWriteBackBuffer
+        var compressed              = this.compressed
+        var branchEarly             = this.branchEarly
+        var multiply                = this.multiply
+        var divide                  = this.divide
+        var shifter                 = this.shifter
+        var prediction              = this.prediction
+        var mergeIBusDBus           = this.mergeIBusDBus
+        var optimization            = this.optimization
+        var gccVersion              = this.gccVersion
 
-        val shortOptions = ListBuffer[String]()
+        for(arg <- args.toList){
+            val opt_val = arg.split("=").map(_.trim)
 
-        for(option <- configOptions){
-            val optionVal = ((configId >> option._3) & ((1<<(option._4))-1)).toInt
-
-            shortOptions += s"${option._2}_${optionVal}"
-        }
-
-        val str = shortOptions.mkString("_")
-
-        str
-    }
-
-    def constructConfig(configId : Long) : CoreMarkCpuComplexConfig = {
-
-		var writeBackStage		 	  = true
-        var bypassExecute             = false
-        var bypassMemory              = false
-        var bypassWriteBack           = false
-        var bypassWriteBackBuffer     = false
-        var compressed                = false
-        var branchEarly               = false
-        var multiply                  = MultiplyOption.None
-        var divide                    = DivideOption.None
-        var shifter                   = ShifterOption.Iterative
-        var prediction                = PredictionOption.None
-
-        var str = new StringBuilder
-        str ++= "\n"
-        str ++= "-----------------------------------\n"
-        str ++= "CoreMarkCpuComplexConfig parameters\n"
-        str ++= "-----------------------------------\n"
-        str ++= "\n"
-
-        for(option <- configOptions){
-            val optionVal = ((configId >> option._3) & ((1<<(option._4))-1)).toInt
-
-            if (optionVal > option._4){
-                printf("Option %s out of bounds (%d)!\n", option._1, optionVal)
-                return null
-            }
-
-            option._1 match {
-				case "WriteBackStage"		  => { writeBackStage         = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
-                case "BypassExecute"          => { bypassExecute          = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
-                case "BypassMemory"           => { bypassMemory           = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
-                case "BypassWriteBack"        => { bypassWriteBack        = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
-                case "BypassWriteBackBuffer"  => { bypassWriteBackBuffer  = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
-                case "Compressed"             => { compressed             = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
-                case "BranchEarly"            => { branchEarly            = (optionVal == 1); str ++= s"${option._1}: ${ optionVal }\n" }
-                case "Multiply"               => { multiply               = MultiplyOption(optionVal); str ++= s"${option._1}: ${ multiply.toString }\n" }
-                case "Divide"                 => { divide                 = DivideOption(optionVal); str ++= s"${option._1}: ${ divide.toString }\n" }
-                case "Shifter"                => { shifter                = ShifterOption(optionVal); str ++= s"${option._1}: ${ shifter.toString }\n" }
-                case "Prediction"             => { prediction             = PredictionOption(optionVal); str ++= s"${option._1}: ${ prediction.toString }\n" }
-                case _                        =>
+            opt_val(0) match {
+                case "--Pipe"       => pipeline                 = PipelineOption(opt_val(1).toInt)
+                case "--BypE"       => bypassExecute            = (opt_val(1) == "1")
+                case "--BypM"       => bypassMemory             = (opt_val(1) == "1")
+                case "--BypW"       => bypassWriteBack          = (opt_val(1) == "1")
+                case "--BypWB"      => bypassWriteBackBuffer    = (opt_val(1) == "1")
+                case "--C"          => compressed               = (opt_val(1) == "1")
+                case "--BrE"        => branchEarly              = (opt_val(1) == "1")
+                case "--Mul"        => multiply                 = MultiplyOption(opt_val(1).toInt)
+                case "--Div"        => divide                   = DivideOption(opt_val(1).toInt)
+                case "--Shft"       => shifter                  = ShifterOption(opt_val(1).toInt)
+                case "--BP"         => prediction               = PredictionOption(opt_val(1).toInt)
+                case "--MergeIBDB"  => mergeIBusDBus            = (opt_val(1) == "1")
+                case "--Opt"        => optimization             = OptimizationOption(opt_val(1).toInt)
+                case "--Gcc"        => gccVersion               = GccVersionOption(opt_val(1).toInt)
             }
         }
 
-        str ++= "-----------------------------------\n"
-        str ++= "\n"
+        this.copy(
+            pipeline                = pipeline,
+            bypassExecute           = bypassExecute,
+            bypassMemory            = bypassMemory,
+            bypassWriteBack         = bypassWriteBack,
+            bypassWriteBackBuffer   = bypassWriteBackBuffer,
+            compressed              = compressed,
+            branchEarly             = branchEarly,
+            multiply                = multiply,
+            divide                  = divide,
+            shifter                 = shifter,
+            prediction              = prediction,
+            mergeIBusDBus           = mergeIBusDBus,
+            optimization            = optimization,
+            gccVersion              = gccVersion
+        )
+    }
 
-        println(str)
+    def toCoreMarkCpuComplexConfig() = {
 
-        //println(multiply.toString)
+        val ucycleCsrConfig =  CsrPluginConfig(
+            catchIllegalAccess  = false,
+            mvendorid           = null,
+            marchid             = null,
+            mimpid              = null,
+            mhartid             = null,
+            misaExtensionsInit  = 66,
+            misaAccess          = CsrAccess.NONE,
+            mtvecAccess         = CsrAccess.NONE,
+            mtvecInit           = 0x00000020l,
+            mepcAccess          = CsrAccess.NONE,
+            mscratchGen         = false,
+            mcauseAccess        = CsrAccess.READ_ONLY,
+            mbadaddrAccess      = CsrAccess.NONE,
+            mcycleAccess        = CsrAccess.NONE,
+            minstretAccess      = CsrAccess.NONE,
+            ecallGen            = false,
+            wfiGenAsWait        = false,
+            ucycleAccess        = CsrAccess.READ_ONLY
+        )
+
+        val gccVersionStr = gccVersion match {
+                                case GccVersionOption.Ver7_2_0      => "7.2.0"
+                                case GccVersionOption.Ver8_2_0      => "8.2.0"
+                            }
+        val optimizationStr = optimization match {
+                                case OptimizationOption.Os          => "Os"
+                                case OptimizationOption.O2          => "O2"
+                                case OptimizationOption.O3          => "O3"
+                            }
+        val compressedStr = if (compressed) "c" else ""
+        val multiplyStr = if (multiply == MultiplyOption.None) "" else "m"
+
+        val hexFilename = s"src/test/cpp/coremark/${gccVersionStr}/coremark_${optimizationStr}_rv32i${multiplyStr}${compressedStr}.hex"
+        assert(Files.exists(Paths.get(hexFilename)), s"File doesn't exist: ${hexFilename}")
 
         val config = CoreMarkCpuComplexConfig(
-            onChipRamHexFile = "src/test/cpp/coremark/coremark_O2_rv32i.hex",
-            coreFrequency = 100 MHz,
-            mergeIBusDBus = false,
-            iBusLatency = 1,
-            dBusLatency = 1,
-			writeBackStage = writeBackStage,
+            onChipRamHexFile            = hexFilename,
+            coreFrequency               = 100 MHz,
+            mergeIBusDBus               = mergeIBusDBus,
+            iBusLatency                 = 1,
+            dBusLatency                 = 1,
+			memoryStage                 = pipeline match {
+                                            case PipelineOption.ExeMemWb      => true
+                                            case PipelineOption.ExeMem        => true
+                                            case PipelineOption.Exe           => false
+                                          },
+			writeBackStage              = pipeline match {
+                                            case PipelineOption.ExeMemWb      => true
+                                            case PipelineOption.ExeMem        => false
+                                            case PipelineOption.Exe           => false
+                                          },
             apb3Config = Apb3Config(
                 addressWidth = 20,
                 dataWidth = 32
             ),
             cpuPlugins = ArrayBuffer(
                 new IBusSimplePlugin(
-                    resetVector = 0x00000000l,
+                    resetVector             = 0x00000000l,
                     cmdForkOnSecondStage    = true,
                     cmdForkPersistence      = false,
                     prediction              = prediction match {
@@ -233,62 +267,69 @@ object CoreMarkCpuComplexConfig{
         config
     }
 
+    def toShortStr(assignChar : Char = '=', separatorChar : Char = ' ') : String = {
 
-    def default = CoreMarkCpuComplexConfig(
-        onChipRamHexFile = "src/test/cpp/coremark/coremark_O2_rv32i.hex",
-        coreFrequency = 100 MHz,
-        mergeIBusDBus = false,
-        iBusLatency = 1,
-        dBusLatency = 1,
-		writeBackStage = true,
-        apb3Config = Apb3Config(
-            addressWidth = 20,
-            dataWidth = 32
-        ),
-        cpuPlugins = ArrayBuffer(
-            new IBusSimplePlugin(
-                resetVector = 0x00000000l,
-                cmdForkOnSecondStage    = true,
-                cmdForkPersistence      = false,
-                prediction              = NONE,
-                catchAccessFault        = false,
-                compressedGen           = false
-            ),
-            new DBusSimplePlugin(
-                catchAddressMisaligned  = false,
-                catchAccessFault        = false,
-                earlyInjection          = false
-            ),
-            new DecoderSimplePlugin(
-                catchIllegalInstruction = false
-            ),
-            new RegFilePlugin(
-                regFileReadyKind        = plugin.SYNC,
-                zeroBoot                = false
-            ),
-            new IntAluPlugin,
-            new SrcPlugin(
-                separatedAddSub         = false,
-                executeInsertion        = false
-            ),
-            new LightShifterPlugin,
-            new MulSimplePlugin,
-            new DivPlugin,
-            new HazardSimplePlugin(
-                bypassExecute           = false,
-                bypassMemory            = false,
-                bypassWriteBack         = false,
-                bypassWriteBackBuffer   = false
-            ),
-            new BranchPlugin(
-                earlyBranch             = false,
-                catchAddressMisaligned  = false
-            ),
-            new CsrPlugin(ucycleCsrConfig),
-            new YamlPlugin("cpu0.yaml")
-        )
-    )
+        val options = ListBuffer[String]()
 
+        options += s"Pipe${ assignChar }${ pipeline.toString }"
+        options += s"BypE${ assignChar }${ bypassExecute.compare(false)}"
+        options += s"BypM${ assignChar }${ bypassMemory.compare(false)}"
+        options += s"BypW${ assignChar }${ bypassWriteBack.compare(false) }"
+        options += s"BypWB${ assignChar }${ bypassWriteBackBuffer.compare(false) }"
+        options += s"C${ assignChar }${ compressed.compare(false) }"
+        options += s"BrE${ assignChar }${ branchEarly.compare(false) }"
+        options += s"Mul${ assignChar }${ multiply.toString }"
+        options += s"Div${ assignChar }${ divide.toString }"
+        options += s"Shft${ assignChar }${ shifter.toString }"
+        options += s"BP${ assignChar }${ prediction.toString }"
+        options += s"MergeIBDB${ assignChar }${ mergeIBusDBus.compare(false) }"
+        options += s"Opt${ assignChar }${ optimization.toString }"
+        options += s"Gcc${ assignChar }${ gccVersion.toString }"
+
+        val str = options.mkString(separatorChar.toString)
+
+        str
+    }
+
+    def toLongStr : String = {
+        val options = ListBuffer[String]()
+
+        options += s"Pipeline            : ${ pipeline.toString }"
+        options += s"BypassExecute       : ${ bypassExecute.compare(false)}"
+        options += s"BypMemory           : ${ bypassMemory.compare(false)}"
+        options += s"BypWriteBack        : ${ bypassWriteBack.compare(false) }"
+        options += s"BypWwriteBackBuffer : ${ bypassWriteBackBuffer.compare(false) }"
+        options += s"Compressed          : ${ compressed.compare(false) }"
+        options += s"BranchEarly         : ${ branchEarly.compare(false) }"
+        options += s"Multiply            : ${ multiply.toString }"
+        options += s"Divide              : ${ divide.toString }"
+        options += s"Shifter             : ${ shifter.toString }"
+        options += s"BranchPrediction    : ${ prediction.toString }"
+        options += s"MergeIBusDBus       : ${ mergeIBusDBus.compare(false) }"
+        options += s"Optimization        : ${ optimization.toString }"
+        options += s"GccVersion          : ${ gccVersion.toString }"
+
+        val str = options.mkString("\n")
+
+        str
+    }
+
+}
+
+
+case class CoreMarkCpuComplexConfig(
+                  onChipRamHexFile  	: String,
+                  coreFrequency     	: HertzNumber,
+                  mergeIBusDBus     	: Boolean,
+                  iBusLatency       	: Int,
+                  dBusLatency       	: Int,
+                  apb3Config        	: Apb3Config,
+				  memoryStage			: Boolean,
+				  writeBackStage		: Boolean,
+                  cpuPlugins        	: ArrayBuffer[Plugin[VexRiscv]])
+{
+    require(iBusLatency >=1, "iBusLatency must be >= 1")
+    require(dBusLatency >=1, "dBusLatency must be >= 1")
 }
 
 case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig, synth : Boolean = false) extends Component
@@ -304,7 +345,7 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig, synth : Boolean
 
     val cpu = new VexRiscv(
         config = VexRiscvConfig(
-			withMemoryStage 		= true,
+			withMemoryStage 		= config.memoryStage,
 			withWriteBackStage 		= config.writeBackStage,
             plugins 				= config.cpuPlugins
         )
