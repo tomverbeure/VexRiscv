@@ -227,7 +227,8 @@ case class CoreMarkParameters(
                 ),
                 new RegFilePlugin(
                     regFileReadyKind        = plugin.SYNC,
-                    zeroBoot                = false
+                    zeroBoot                = false,
+                    readInExecute           = false
                 ),
                 new IntAluPlugin,
                 new SrcPlugin(
@@ -351,7 +352,7 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig, synth : Boolean
         )
     )
 
-    val pipelineDBus    = true
+    val pipelineDBus    = false
     val pipelineMainBus = false
 
     // The CPU has 2 busses: iBus and dBus.
