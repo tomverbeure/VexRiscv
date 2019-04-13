@@ -124,6 +124,7 @@ case class CoreMarkParameters(
                 case "--MergeIBDB"  => mergeIBusDBus            = (opt_val(1) == "1")
                 case "--Opt"        => optimization             = OptimizationOption(opt_val(1).toInt)
                 case "--Gcc"        => gccVersion               = GccVersionOption(opt_val(1).toInt)
+                case "--synth"      =>
             }
         }
 

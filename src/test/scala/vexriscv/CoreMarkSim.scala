@@ -15,24 +15,11 @@ object CoreMarkSim {
 
     def runSynth(config : CoreMarkCpuComplexConfig, name : String = "CoreMarkTop") = {
 
-        val rtl = SpinalVerilog({
+        val spinalConfig = SpinalConfig(anonymSignalUniqueness = true)
+        val rtl = spinalConfig.generateVerilog({
             new CoreMarkTop(config, synth = true).setDefinitionName(name)
         })
 
-//        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol0.bin"), new File("quartus"))
-//        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol1.bin"), new File("quartus"))
-//        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol2.bin"), new File("quartus"))
-//        FileUtils.copyFileToDirectory(new File(name + ".v_toplevel_system_cpuComplex_ram_ram_symbol3.bin"), new File("quartus"))
-
-/*
-        QuartusFlow(
-            quartusPath = "/home/tom/altera/13.0sp1/quartus/bin/",
-            workspacePath = "quartus",
-            toplevelPath = name + ".v",
-            family = "Cyclone II",
-            device ="EP2C70F672C6"
-        )
-*/
     }
 
     def runSim(config : CoreMarkCpuComplexConfig, name : String = "CoreMarkTop") = {
@@ -76,13 +63,15 @@ object CoreMarkSim {
 
     def main(args: Array[String]): Unit = {
 
+        val synth = args.contains("--synth")
+
 		val params = CoreMarkParameters().withArgs(args)
 		val config = params.toCoreMarkCpuComplexConfig() 
 
 		println(params.toShortStr())
 		println(params.toLongStr)
 
-        if (false){
+        if (synth){
             runSynth(config, "CoreMarkTop")
         }
         else{
