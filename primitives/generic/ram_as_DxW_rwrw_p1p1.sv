@@ -1,8 +1,9 @@
 
 module ram_as_DxW_rwrw_p1p1 
     #(
-        DEPTH       = 512,
-        WIDTH       = 8
+        DEPTH               = 512,
+        WIDTH               = 8,
+        READ_BEFORE_WRITE   = 0
     ) (
     	clock_a,
 
@@ -43,7 +44,8 @@ module ram_as_DxW_rwrw_p1p1
         q_a <= ram0[address_a];
         if (wren_a) begin
             ram0[address_a] <= data_a;
-//            q_a             <= data_a;
+            if (READ_BEFORE_WRITE == 0)
+                q_a             <= data_a;
         end
     end
 
@@ -51,7 +53,8 @@ module ram_as_DxW_rwrw_p1p1
         q_b <= ram0[address_b];
         if (wren_b) begin
             ram0[address_b] <= data_b;
-//            q_b             <= data_b;
+            if (READ_BEFORE_WRITE == 0)
+                q_b             <= data_b;
         end
     end
 endmodule
