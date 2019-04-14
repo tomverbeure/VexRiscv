@@ -1,0 +1,14 @@
+
+#read_verilog -sv ../ram_DxW_rwrw_p1p1.sv
+#read_verilog -sv test_ram_DxW_rwrw_p1p1.sv
+
+#read_verilog -sv ../ram_DxW_rrw_p1p1.sv
+#read_verilog -sv test_ram_DxW_rrw_p1p1.sv
+
+read_verilog -sv ../ram_as_DxW_rwrw_p1p1.sv
+read_verilog -sv test_ram_as_DxW_rwrw_p1p1.sv
+
+synth_ecp5
+
+write_verilog test_ram.v
+
