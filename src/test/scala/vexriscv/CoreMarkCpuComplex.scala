@@ -511,24 +511,21 @@ case class CoreMarkPipelinedMemoryBusRam(dualBus : Boolean, onChipRamSize : BigI
         }
     }
     else{
-		val ram = new dpram_8kx32_p1p1
-		ram.io.address_a			:= (io.busA.cmd.address >> 2).resized
-		ram.io.wren_a				:= False
-		ram.io.byteena_a			:= 0
-		ram.io.data_a				:= 0
-		ram.io.q_a					<> io.busA.rsp.data
-
-        io.busA.cmd.ready := True
-		io.busA.rsp.valid := RegNext(io.busA.cmd.fire && !io.busA.cmd.write) init(False)
-
-		ram.io.address_b			:= (io.busB.cmd.address >> 2).resized
-		ram.io.wren_b				:= io.busB.cmd.valid & io.busB.cmd.write
-		ram.io.byteena_b			:= io.busB.cmd.mask
-		ram.io.data_b				:= io.busB.cmd.data
-		ram.io.q_b					<> io.busB.rsp.data
+		val ram = new ram_DxWb_rrw_p1p1(depth = (onChipRamSize/4).toInt, width = 32)
+		ram.io.address_a			:= (io.busB.cmd.address >> 2).resized
+		ram.io.wren_a				:= io.busB.cmd.valid & io.busB.cmd.write
+		ram.io.byteena_a			:= io.busB.cmd.mask
+		ram.io.data_a				:= io.busB.cmd.data
+		ram.io.q_a					<> io.busB.rsp.data
 
         io.busB.cmd.ready := True
 		io.busB.rsp.valid := RegNext(io.busB.cmd.fire && !io.busB.cmd.write) init(False)
+
+		ram.io.address_b			:= (io.busA.cmd.address >> 2).resized
+		ram.io.q_b					<> io.busA.rsp.data
+
+        io.busA.cmd.ready := True
+		io.busA.rsp.valid := RegNext(io.busA.cmd.fire && !io.busA.cmd.write) init(False)
 
     }
 
@@ -619,73 +616,106 @@ case class CoreMarkTop(config : CoreMarkCpuComplexConfig, synth : Boolean = fals
     }
 }
 
-class dpram_8kx32_p1p1 extends BlackBox {
+class ram_DxWb_rrw_p1p1(
+        depth               : Int,
+        width               : Int
+    ) extends BlackBox {
+
+    val generic = new Generic {
+        val DEPTH           = depth
+        val WIDTH           = width
+    }
 
     val io = new Bundle {
         val clock           = in(Bool)
-        val address_a       = in(UInt(14 bits))
+        val address_a       = in(UInt(log2Up(depth) bits))
         val wren_a          = in(Bool)
-        val byteena_a       = in(Bits(4 bits))
-        val data_a          = in(Bits(32 bits))
-        val q_a             = out(Bits(32 bits))
+        val byteena_a       = in(Bits((width/8) bits))
+        val data_a          = in(Bits(width bits))
+        val q_a             = out(Bits(width bits))
 
-        val address_b       = in(UInt(16 bits))
-        val wren_b          = in(Bool)
-        val byteena_b       = in(Bits(4 bits))
-        val data_b          = in(Bits(32 bits))
-        val q_b             = out(Bits(32 bits))
+        val address_b       = in(UInt(log2Up(depth) bits))
+        val q_b             = out(Bits(width bits))
     }
 
     mapCurrentClockDomain(io.clock)
     noIoPrefix()
 
-    addRTLPath("./primitives/cyclone2/dpram_8kx32_p1p1/dpram_8kx32_p1p1.v")
+    addRTLPath("./primitives/generic/ram_DxWb_rrw_p1p1.sv")
 }
 
-class dpram_8kx32_p2p1 extends BlackBox {
+class altsyncram(
+      operation_mode                      : String = "BIDIR_DUAL_PORT",
+
+      width_a                             : Int = 1,
+      numwords_a                          : Int = 2,
+      outdata_reg_a                       : String = "UNREGISTERED",
+      address_aclr_a                      : Boolean = false,
+      outdata_aclr_a                      : Boolean = false,
+      indata_aclr_a                       : Boolean = false,
+      wrcontrol_aclr_a                    : Boolean = false,
+      byteena_aclr_a                      : Boolean = false,
+      width_byteena_a                     : Int = 1,
+
+      width_b                             : Int = 1,
+      numwords_b                          : Int = 2,
+      rdcontrol_reg_b                     : String = "CLOCK1",
+      address_reg_b                       : String = "CLOCK1",
+      indata_reg_b                        : String = "CLOCK1",
+      wrcontrol_wraddress_reg_b           : String = "CLOCK1",
+      byteena_reg_b                       : String = "CLOCK1",
+      outdata_reg_b                       : String = "UNREGISTERED",
+      outdata_aclr_b                      : String = "NONE",
+      rdcontrol_aclk_b                    : String = "NONE",
+      indata_aclr_b                       : String = "NONE",
+      wrcontrol_aclr_b                    : String = "NONE",
+      address_aclr_b                      : String = "NONE",
+      byteena_aclr_b                      : String = "NONE",
+      width_byteena_b                     : Int = 1,
+
+      byte_size                           : Int = -1,
+
+      read_during_write_mode_mixed_ports  : String = "",
+      ram_block_type                      : String = "AUTO",
+      init_file                           : String = "UNUSED",
+      maximum_depth                       : Int = 0,
+      read_during_write_mode_port_a       : String = "",
+      read_during_write_mode_port_b       : String = "",
+      enable_ecc                          : String = "FALSE",
+      power_up_uninitialized              : String = "FALSE",
+      implement_in_les                    : String = "OFF"
+    ) extends BlackBox {
+
+    val widthad_a = log2Up(numwords_a)
+    val widthad_b = log2Up(numwords_b)
+
+    val generic = new Generic {
+        val OPERATION_MODE              = operation_mode
+
+        val WIDTH_A                     = width_a
+        val WIDTHAD_A                   = widthad_a
+        val NUMWORDS_A                  = numwords_a
+        val OUTDATA_REG_A               = outdata_reg_a
+        val ADDRESS_ACLR_A              = if (address_aclr_a)   "CLEAR0" else "NONE"
+        val OUTDATA_ACLR_A              = if (outdata_aclr_a)   "CLEAR0" else "NONE"
+        val INDATA_ACLR_A               = if (indata_aclr_a)    "CLEAR0" else "NONE"
+        val WRCONTROL_ACLR_A            = if (wrcontrol_aclr_a) "CLEAR0" else "NONE"
+        val BYTEENA_ACLR_A              = if (byteena_aclr_a)   "CLEAR0" else "NONE"
+    }
 
     val io = new Bundle {
         val clock           = in(Bool)
-        val address_a       = in(UInt(14 bits))
+        val address_a       = in(UInt(widthad_a bits))
         val wren_a          = in(Bool)
-        val byteena_a       = in(Bits(4 bits))
-        val data_a          = in(Bits(32 bits))
-        val q_a             = out(Bits(32 bits))
+        val byteena_a       = if(width_byteena_a > 1) in(Bits(width_byteena_a bits)) else null
+        val data_a          = in(Bits(width_a bits))
+        val q_a             = out(Bits(width_a bits))
 
-        val address_b       = in(UInt(16 bits))
-        val wren_b          = in(Bool)
-        val byteena_b       = in(Bits(4 bits))
-        val data_b          = in(Bits(32 bits))
-        val q_b             = out(Bits(32 bits))
+        val address_b       = in(UInt(widthad_b bits))
+        val q_b             = out(Bits(width_b bits))
     }
 
     mapCurrentClockDomain(io.clock)
     noIoPrefix()
-
-    addRTLPath("./primitives/cyclone2/dpram_8kx32_p2p1/dpram_8kx32_p2p1.v")
 }
-
-class dpram_8kx32_p1p2 extends BlackBox {
-
-    val io = new Bundle {
-        val clock           = in(Bool)
-        val address_a       = in(UInt(14 bits))
-        val wren_a          = in(Bool)
-        val byteena_a       = in(Bits(4 bits))
-        val data_a          = in(Bits(32 bits))
-        val q_a             = out(Bits(32 bits))
-
-        val address_b       = in(UInt(16 bits))
-        val wren_b          = in(Bool)
-        val byteena_b       = in(Bits(4 bits))
-        val data_b          = in(Bits(32 bits))
-        val q_b             = out(Bits(32 bits))
-    }
-
-    mapCurrentClockDomain(io.clock)
-    noIoPrefix()
-
-    addRTLPath("./primitives/cyclone2/dpram_8kx32_p2p1/dpram_8kx32_p1p2.v")
-}
-
 
