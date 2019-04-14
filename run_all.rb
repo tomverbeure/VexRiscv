@@ -1,8 +1,9 @@
 #! /usr/bin/env ruby
 require 'pp'
 require 'open3'
+require 'fileutils'
 
-def run_test(option_str)
+def run_sim(option_str)
 
     log = []
 
@@ -21,6 +22,69 @@ def run_test(option_str)
     end
 
     total_ticks
+end
+
+def run_syn(option_str)
+
+if 1
+    FileUtils.rm_f("./CoreMarkTop.v")
+    log = []
+    Open3.popen3("sbt \"test:runMain coremark.CoreMarkSim --synth #{option_str}\"") do |stdout, stderr, status, thread|
+        while line = stderr.gets do
+            puts line
+            log << line
+
+            if line =~ /Total ticks\s*:\s*(\d+)/
+                total_ticks = $1
+            end
+        end
+    end
+
+    log = []
+    Open3.popen3("cd ./quartus && ./run_quartus.sh") do |stdout, stderr, status, thread|
+        while line = stderr.gets do
+            puts line
+            log << line
+        end
+    end
+end
+
+    fit_file = File.open("./quartus/output_files/VexRiscv.fit.rpt")
+    resource_line = nil
+    fit_file.readlines.each do |l|
+        if l.scrub =~ / \|VexRiscv:cpu\|/
+            resource_line = l
+        end
+    end
+    unless resource_line
+        return nil
+    end
+    #puts resource_line
+
+    fields = resource_line.split(";").collect{ |f| f.strip }
+    result = {
+        "ALMs"      => fields[3].to_i,
+        "ALUTs"     => fields[7].to_i,
+        "FFs"       => fields[8].to_f,
+        "RAMs"      => fields[11].to_i,
+    }
+
+    sta_file = File.open("./quartus/output_files/VexRiscv.sta.rpt")
+    mhz_line = nil
+    sta_file.readlines.each do |l|
+        if l.scrub =~ /MHz/
+            mhz_line = l
+        end
+    end
+    unless mhz_line
+        return nil
+    end
+    fields = mhz_line.split(";").collect{ |f| f.strip }
+    result["MHz"] = fields[1]
+
+    pp result
+    result
+
 end
 
 
@@ -109,15 +173,19 @@ all_tests.each do |test_set|
     puts test_set_name
     puts "============================================================"
 
+
     test_set[test_set_name].each do |config, config_str|
         config_name = config.keys.first
         config_option_str = config[config_name]
 
         puts config_name
-        total_ticks = run_test(config_option_str)
-        puts "%%%%%% #{config_name} : #{total_ticks} : #{config_option_str}"
 
-        config[:total_ticks] = total_ticks
+        result = run_syn(config_option_str)
+        total_ticks = run_sim(config_option_str)
+        puts "%%%%%% #{config_name} : #{total_ticks} : #{config_option_str}"
+        result["total_ticks"] = total_ticks
+
+        config[:result] = result
     end
 end
 
