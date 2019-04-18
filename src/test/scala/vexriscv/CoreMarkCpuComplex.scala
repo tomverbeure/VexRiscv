@@ -20,6 +20,7 @@ object PipelineOption extends Enumeration {
     val ExeMemWb        = Value(0)
     val ExeMem          = Value(1)
     val Exe             = Value(2)
+    val ExeMem2Wb       = Value(3)
 }
 
 object MultiplyOption extends Enumeration {
@@ -76,6 +77,7 @@ case class CoreMarkParameters(
                 pipeline                  : PipelineOption      = PipelineOption.ExeMemWb,
                 bypassExecute             : Boolean             = false,
                 bypassMemory              : Boolean             = false,
+                bypassMemory2             : Boolean             = false,
                 bypassWriteBack           : Boolean             = false,
                 bypassWriteBackBuffer     : Boolean             = false,
                 compressed                : Boolean             = false,
@@ -94,6 +96,7 @@ case class CoreMarkParameters(
         var pipeline                = this.pipeline
         var bypassExecute           = this.bypassExecute
         var bypassMemory            = this.bypassMemory
+        var bypassMemory2           = this.bypassMemory2
         var bypassWriteBack         = this.bypassWriteBack
         var bypassWriteBackBuffer   = this.bypassWriteBackBuffer
         var compressed              = this.compressed
@@ -113,6 +116,7 @@ case class CoreMarkParameters(
                 case "--Pipe"       => pipeline                 = PipelineOption(opt_val(1).toInt)
                 case "--BypE"       => bypassExecute            = (opt_val(1) == "1")
                 case "--BypM"       => bypassMemory             = (opt_val(1) == "1")
+                case "--BypM2"      => bypassMemory2            = (opt_val(1) == "1")
                 case "--BypW"       => bypassWriteBack          = (opt_val(1) == "1")
                 case "--BypWB"      => bypassWriteBackBuffer    = (opt_val(1) == "1")
                 case "--C"          => compressed               = (opt_val(1) == "1")
@@ -132,6 +136,7 @@ case class CoreMarkParameters(
             pipeline                = pipeline,
             bypassExecute           = bypassExecute,
             bypassMemory            = bypassMemory,
+            bypassMemory2           = bypassMemory2,
             bypassWriteBack         = bypassWriteBack,
             bypassWriteBackBuffer   = bypassWriteBackBuffer,
             compressed              = compressed,
@@ -191,11 +196,19 @@ case class CoreMarkParameters(
             iBusLatency                 = 1,
             dBusLatency                 = 1,
 			memoryStage                 = pipeline match {
+                                            case PipelineOption.ExeMem2Wb     => true
                                             case PipelineOption.ExeMemWb      => true
                                             case PipelineOption.ExeMem        => true
                                             case PipelineOption.Exe           => false
                                           },
+			memory2Stage                = pipeline match {
+                                            case PipelineOption.ExeMem2Wb     => true
+                                            case PipelineOption.ExeMemWb      => false
+                                            case PipelineOption.ExeMem        => false
+                                            case PipelineOption.Exe           => false
+                                          },
 			writeBackStage              = pipeline match {
+                                            case PipelineOption.ExeMem2Wb     => true
                                             case PipelineOption.ExeMemWb      => true
                                             case PipelineOption.ExeMem        => false
                                             case PipelineOption.Exe           => false
@@ -254,6 +267,7 @@ case class CoreMarkParameters(
                 new HazardSimplePlugin(
                     bypassExecute           = bypassExecute,
                     bypassMemory            = bypassMemory,
+                    bypassMemory2           = bypassMemory2,
                     bypassWriteBack         = bypassWriteBack,
                     bypassWriteBackBuffer   = bypassWriteBackBuffer
                 ),
@@ -276,6 +290,7 @@ case class CoreMarkParameters(
         options += s"Pipe${ assignChar }${ pipeline.toString }"
         options += s"BypE${ assignChar }${ bypassExecute.compare(false)}"
         options += s"BypM${ assignChar }${ bypassMemory.compare(false)}"
+        options += s"BypM2${ assignChar }${ bypassMemory2.compare(false)}"
         options += s"BypW${ assignChar }${ bypassWriteBack.compare(false) }"
         options += s"BypWB${ assignChar }${ bypassWriteBackBuffer.compare(false) }"
         options += s"C${ assignChar }${ compressed.compare(false) }"
@@ -299,6 +314,7 @@ case class CoreMarkParameters(
         options += s"Pipeline            : ${ pipeline.toString }"
         options += s"BypassExecute       : ${ bypassExecute.compare(false)}"
         options += s"BypMemory           : ${ bypassMemory.compare(false)}"
+        options += s"BypMemory2          : ${ bypassMemory2.compare(false)}"
         options += s"BypWriteBack        : ${ bypassWriteBack.compare(false) }"
         options += s"BypWwriteBackBuffer : ${ bypassWriteBackBuffer.compare(false) }"
         options += s"Compressed          : ${ compressed.compare(false) }"
@@ -327,6 +343,7 @@ case class CoreMarkCpuComplexConfig(
                   dBusLatency       	: Int,
                   apb3Config        	: Apb3Config,
 				  memoryStage			: Boolean,
+				  memory2Stage			: Boolean,
 				  writeBackStage		: Boolean,
                   cpuPlugins        	: ArrayBuffer[Plugin[VexRiscv]])
 {
@@ -348,6 +365,7 @@ case class CoreMarkCpuComplex(config : CoreMarkCpuComplexConfig, synth : Boolean
     val cpu = new VexRiscv(
         config = VexRiscvConfig(
 			withMemoryStage 		= config.memoryStage,
+			withMemory2Stage 		= config.memory2Stage,
 			withWriteBackStage 		= config.writeBackStage,
             plugins 				= config.cpuPlugins
         )
