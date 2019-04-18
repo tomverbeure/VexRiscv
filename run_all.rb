@@ -2,6 +2,7 @@
 require 'pp'
 require 'open3'
 require 'fileutils'
+require 'json'
 
 def run_sim(option_str)
 
@@ -166,6 +167,9 @@ all_tests = [
     ] },
 ]
 
+
+results_file = File.open("results.txt", "w+")
+
 all_tests.each do |test_set|
     test_set_name = test_set.keys.first
 
@@ -180,12 +184,21 @@ all_tests.each do |test_set|
 
         puts config_name
 
-        result = run_syn(config_option_str)
-        total_ticks = run_sim(config_option_str)
-        puts "%%%%%% #{config_name} : #{total_ticks} : #{config_option_str}"
-        result["total_ticks"] = total_ticks
+        result = {}
+        if nil
+            result = run_syn(config_option_str)
+        end
+
+        if 1
+            total_ticks = run_sim(config_option_str)
+            puts "%%%%%% #{config_name} : #{total_ticks} : #{config_option_str}"
+            result["total_ticks"] = total_ticks
+        end
 
         config[:result] = result
+
+        results_file.puts JSON.dump(all_tests)
+        results_file.flush
     end
 end
 
