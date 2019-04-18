@@ -147,23 +147,27 @@ pipe3_medium_config_str = pipe3_medium_config.collect { |opt, val| "#{opt}=#{val
 
 all_tests = [
     { "bypass_impact_tests" =>  [
-        { "5-stage, no bypass"  => "--BypE=0 --BypM=0 --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "5-stage, bypassE"    => "--BypE=1 --BypM=0 --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "5-stage, bypassM"    => "--BypE=0 --BypM=1 --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "5-stage, bypassW"    => "--BypE=0 --BypM=0 --BypW=1 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "5-stage, bypassWB"   => "--BypE=0 --BypM=0 --BypW=0 --BypWB=1 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "5-stage, bypassAll"  => "--BypE=1 --BypM=1 --BypW=1 --BypWB=1 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-
-        { "4-stage, no bypass"  => "--BypE=0 --BypM=0 --BypW=0 --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "4-stage, bypassE"    => "--BypE=1 --BypM=0 --BypW=0 --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "4-stage, bypassM"    => "--BypE=0 --BypM=1 --BypW=0 --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "4-stage, bypassWB"   => "--BypE=0 --BypM=0 --BypW=0 --BypWB=1 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "4-stage, bypassAll"  => "--BypE=1 --BypM=1 --BypW=1 --BypWB=1 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-
-        { "3-stage, no bypass"  => "--BypE=0 --BypM=0 --BypW=0 --BypWB=0 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "3-stage, bypassE"    => "--BypE=1 --BypM=0 --BypW=0 --BypWB=0 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "3-stage, bypassWB"   => "--BypE=0 --BypM=0 --BypW=0 --BypWB=1 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-        { "3-stage, bypassAll"  => "--BypE=1 --BypM=1 --BypW=1 --BypWB=1 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+        { "5-stage" => [
+            { "no bypass"  => "--BypE=0 --BypM=0 --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassE"    => "--BypE=1 --BypM=0 --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassM"    => "--BypE=0 --BypM=1 --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassW"    => "--BypE=0 --BypM=0 --BypW=1 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassWB"   => "--BypE=0 --BypM=0 --BypW=0 --BypWB=1 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassAll"  => "--BypE=1 --BypM=1 --BypW=1 --BypWB=1 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+        ] },
+        { "4-stage" => [
+            { "no bypass"  => "--BypE=0 --BypM=0 --BypW=0 --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassE"    => "--BypE=1 --BypM=0 --BypW=0 --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassM"    => "--BypE=0 --BypM=1 --BypW=0 --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassWB"   => "--BypE=0 --BypM=0 --BypW=0 --BypWB=1 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassAll"  => "--BypE=1 --BypM=1 --BypW=1 --BypWB=1 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+        ] },
+        { "3-stage" => [
+            { "no bypass"  => "--BypE=0 --BypM=0 --BypW=0 --BypWB=0 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassE"    => "--BypE=1 --BypM=0 --BypW=0 --BypWB=0 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassWB"   => "--BypE=0 --BypM=0 --BypW=0 --BypWB=1 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassAll"  => "--BypE=1 --BypM=1 --BypW=1 --BypWB=1 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+        ] },
     ] },
 ]
 
@@ -173,32 +177,33 @@ results_file = File.open("results.txt", "w+")
 all_tests.each do |test_set|
     test_set_name = test_set.keys.first
 
-    puts "============================================================"
-    puts test_set_name
-    puts "============================================================"
+    test_set[test_set_name].each do |sub_test_set|
+        sub_test_set_name = sub_test_set.keys.first
 
+        sub_test_set[sub_test_set_name].each do |config, config_str|
+            config_name = config.keys.first
+            config_option_str = config[config_name]
 
-    test_set[test_set_name].each do |config, config_str|
-        config_name = config.keys.first
-        config_option_str = config[config_name]
+            puts "============================================================"
+            puts "#{test_set_name} - #{sub_test_set_name} - #{config_name}"
+            puts "============================================================"
 
-        puts config_name
+            result = {}
+            if nil
+                result = run_syn(config_option_str)
+            end
 
-        result = {}
-        if nil
-            result = run_syn(config_option_str)
+            if 1
+                total_ticks = run_sim(config_option_str)
+                puts "%%%%%% #{config_name} : #{total_ticks} : #{config_option_str}"
+                result["total_ticks"] = total_ticks
+            end
+
+            config[:result] = result
+
+            results_file.puts JSON.dump(all_tests)
+            results_file.flush
         end
-
-        if 1
-            total_ticks = run_sim(config_option_str)
-            puts "%%%%%% #{config_name} : #{total_ticks} : #{config_option_str}"
-            result["total_ticks"] = total_ticks
-        end
-
-        config[:result] = result
-
-        results_file.puts JSON.dump(all_tests)
-        results_file.flush
     end
 end
 
