@@ -89,6 +89,7 @@ end
 end
 
 
+PIPE_EM2W   = 3
 PIPE_EMW    = 0
 PIPE_EM     = 1
 PIPE_E      = 2
@@ -113,6 +114,16 @@ DIV_DHRY    = 2
 SHIFT_ITER      = 0
 SHIFT_BAR_EXE   = 1
 SHIFT_BAR_MEM   = 2
+
+pipe6_medium_config = {
+        "--Pipe"    => PIPE_EM2W,
+        "--BrE"     => 0,
+        "--BP"      => BP_STATIC,
+        "--Shft"    => SHIFT_BAR_EXE,
+        "--Mul"     => MUL_NONE,
+        "--Div"     => DIV_NONE,
+    }
+pipe6_medium_config_str = pipe6_medium_config.collect { |opt, val| "#{opt}=#{val}" }.join(" ")
 
 pipe5_medium_config = {
         "--Pipe"    => PIPE_EMW,
@@ -147,26 +158,35 @@ pipe3_medium_config_str = pipe3_medium_config.collect { |opt, val| "#{opt}=#{val
 
 all_tests = [
     { "bypass_impact_tests" =>  [
+        { "6-stage M2" => [
+            { "no bypass"  => "--BypE=0 --BypM=0 --BypM2=0 --BypW=0 --BypWB=0 #{pipe6_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassE"    => "--BypE=1 --BypM=0 --BypM2=0 --BypW=0 --BypWB=0 #{pipe6_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassM"    => "--BypE=0 --BypM=1 --BypM2=0 --BypW=0 --BypWB=0 #{pipe6_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassM2"   => "--BypE=0 --BypM=0 --BypM2=1 --BypW=0 --BypWB=0 #{pipe6_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassW"    => "--BypE=0 --BypM=0 --BypM2=0 --BypW=1 --BypWB=0 #{pipe6_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassWB"   => "--BypE=0 --BypM=0 --BypM2=0 --BypW=0 --BypWB=1 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassAll"  => "--BypE=1 --BypM=1 --BypM2=1 --BypW=1 --BypWB=1 #{pipe6_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+        ] },
         { "5-stage" => [
-            { "no bypass"  => "--BypE=0 --BypM=0 --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassE"    => "--BypE=1 --BypM=0 --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassM"    => "--BypE=0 --BypM=1 --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassW"    => "--BypE=0 --BypM=0 --BypW=1 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassWB"   => "--BypE=0 --BypM=0 --BypW=0 --BypWB=1 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassAll"  => "--BypE=1 --BypM=1 --BypW=1 --BypWB=1 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "no bypass"  => "--BypE=0 --BypM=0           --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassE"    => "--BypE=1 --BypM=0           --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassM"    => "--BypE=0 --BypM=1           --BypW=0 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassW"    => "--BypE=0 --BypM=0           --BypW=1 --BypWB=0 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassWB"   => "--BypE=0 --BypM=0           --BypW=0 --BypWB=1 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassAll"  => "--BypE=1 --BypM=1           --BypW=1 --BypWB=1 #{pipe5_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
         ] },
         { "4-stage" => [
-            { "no bypass"  => "--BypE=0 --BypM=0 --BypW=0 --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassE"    => "--BypE=1 --BypM=0 --BypW=0 --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassM"    => "--BypE=0 --BypM=1 --BypW=0 --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassWB"   => "--BypE=0 --BypM=0 --BypW=0 --BypWB=1 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassAll"  => "--BypE=1 --BypM=1 --BypW=1 --BypWB=1 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "no bypass"  => "--BypE=0 --BypM=0                    --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassE"    => "--BypE=1 --BypM=0                    --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassM"    => "--BypE=0 --BypM=1                    --BypWB=0 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassWB"   => "--BypE=0 --BypM=0                    --BypWB=1 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassAll"  => "--BypE=1 --BypM=1                    --BypWB=1 #{pipe4_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
         ] },
         { "3-stage" => [
-            { "no bypass"  => "--BypE=0 --BypM=0 --BypW=0 --BypWB=0 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassE"    => "--BypE=1 --BypM=0 --BypW=0 --BypWB=0 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassWB"   => "--BypE=0 --BypM=0 --BypW=0 --BypWB=1 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
-            { "bypassAll"  => "--BypE=1 --BypM=1 --BypW=1 --BypWB=1 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "no bypass"  => "--BypE=0                             --BypWB=0 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassE"    => "--BypE=1                             --BypWB=0 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassWB"   => "--BypE=0                             --BypWB=1 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
+            { "bypassAll"  => "--BypE=1                             --BypWB=1 #{pipe3_medium_config_str} --Opt=#{OPT_O2} --Gcc=0" },
         ] },
     ] },
 ]
