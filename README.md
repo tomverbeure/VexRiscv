@@ -798,8 +798,9 @@ This plugin muxes different input values to produce SRC1/SRC2/SRC_ADD/SRC_SUB/SR
 
 | Parameters | type | description |
 | ------ | ----------- | ------ |
-| separatedAddSub | RegFileReadKind | By default SRC_ADD/SRC_SUB are generated from a single controllable adder/substractor, but if this is set to true, it use separate adder/substractors |
-| executeInsertion | Boolean | By default SRC1/SRC2 are generated in the Decode stage, but if this parameter is true, it is done in the Execute stage (It will relax the bypassing network) |
+| separatedAddSub | RegFileReadKind | By default, SRC_ADD/SRC_SUB are generated from a single controllable adder/substractor, but if this is set to true, it use separate adder/substractors |
+| executeInsertion | Boolean | By default, SRC1/SRC2 values are generated in the Decode stage, but if this parameter is true, it is done in the Execute stage. Doing so relaxes the bypassing network in the Decode stage, but increases timing pressure in the Execute stage. |
+| decodeAddSub | Boolean | By default, SRC_ADD and SRC_SUB calculation is done in the Execute stage. When this parameter is true, the calculation is done in the Decode stage instead. | 
 
 Except for SRC1/SRC2, this plugin does everything at the begining of Execute stage.
 
